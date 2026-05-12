@@ -15,16 +15,15 @@
 2. [The Three Domains](#the-three-domains)
 3. [The Gap](#the-gap)
 4. [Why No One Is Building This](#why-no-one-is-building-this)
-5. [Why Akshar is Positioned to Build It](#why-akshar-is-positioned-to-build-it)
-6. [Prophet Architecture](#prophet-architecture)
-7. [First Principles Design](#first-principles-design)
-8. [Phase 1: Calibration Study](#phase-1-calibration-study)
-9. [Phase 2: Paper Trading](#phase-2-paper-trading)
-10. [Phase 3: Live Trading](#phase-3-live-trading)
-11. [Phase 4: Productization](#phase-4-productization)
-12. [Technical Reference](#technical-reference)
-13. [Risk Register](#risk-register)
-14. [Appendix: Research Sources](#appendix-research-sources)
+5. [Prophet Architecture](#prophet-architecture)
+6. [First Principles Design](#first-principles-design)
+7. [Phase 1: Calibration Study](#phase-1-calibration-study)
+8. [Phase 2: Paper Trading](#phase-2-paper-trading)
+9. [Phase 3: Live Trading](#phase-3-live-trading)
+10. [Phase 4: Productization](#phase-4-productization)
+11. [Technical Reference](#technical-reference)
+12. [Risk Register](#risk-register)
+13. [Appendix: Research Sources](#appendix-research-sources)
 
 ---
 
@@ -336,22 +335,6 @@ Despite being cited by the Federal Reserve, regulated by the CFTC, backed by ICE
 | Gambling stigma | Reputation-conscious AI/ML engineers |
 
 These barriers compound, not add. The set of people who can overcome ALL of them simultaneously is vanishingly small.
-
----
-
-## Why Akshar is Positioned to Build It
-
-| Factor | Why It Matters |
-|---|---|
-| **Existing infrastructure** | FastAPI + RQ worker + Redis + Postgres + Qdrant + LiteLLM + Docker Compose is exactly the stack this needs. Zero greenfield infrastructure build. |
-| **Cheap inference** | DeepSeek Flash via LiteLLM makes 1000-agent simulations affordable. Not OpenAI pricing. Estimated $2-5 per full simulation on Flash. |
-| **No institutional pressure** | Can run a 3-month calibration study without justifying ROI to anyone. The only question is "does it work?" |
-| **Domain interest alignment** | AI + FinTech + capital markets + building. Prophet sits at the exact intersection of stated interests. |
-| **MiroFish is open-source** | Can fork it, modify it, run it locally or containerized. No vendor dependency, no platform risk. |
-| **Polymarket API is mature** | Well-documented public APIs (no auth required for market data), WebSocket support, generous rate limits, builder program tiers. Production-ready. |
-| **Timing** | Prediction markets at $20B+/mo and growing. MiroFish just launched. DeFAI emerging. Three waves converging now. |
-| **Self-hosted SearXNG** | Multi-engine search for constructing seed documents from current news. Fast, no API keys needed. |
-| **No public reputation risk** | This is an experiment run on personal infrastructure. No product launch, no marketing, no external pressure. |
 
 ---
 
