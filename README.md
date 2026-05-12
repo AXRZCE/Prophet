@@ -3,11 +3,14 @@
 ## A Simulation-Calibrated Prediction Market System
 
 > **Phase 1 is not step one of building Prophet. Phase 1 is the experiment that determines whether Prophet should exist at all. This entire document may be worthless. The experiment exists to find out.**
+> **Development must not begin until Phase 0 is complete.**
+> Phase 0 verifies whether MiroFish can be controlled programmatically, whether ReportAgent can return structured probability output, and whether Prophet can run one complete seed-to-report workflow without manual intervention.
 
 **Author:** ClawBot + Akshar
-**Date:** May 11, 2026
-**Status:** Calibration Lab — Phase 1 Narrowed
-**Version:** 1.1
+**Date:** May 12, 2026
+**Status:** Pre-Development — Phase 0 Required
+**Version:** 1.2
+**Phase 0 Spec:** PHASE_0_SPEC.md — required before production development
 
 ---
 
@@ -20,13 +23,17 @@
 5. [Why No One Is Building This](#why-no-one-is-building-this)
 6. [Prophet Architecture](#prophet-architecture)
 7. [First Principles Design](#first-principles-design)
-8. [Phase 1: Calibration Study](#phase-1-calibration-study)
-9. [Phase 2: Paper Trading](#phase-2-paper-trading)
-10. [Phase 3: Live Trading](#phase-3-live-trading)
-11. [Phase 4: Productization](#phase-4-productization)
-12. [Technical Reference](#technical-reference)
-13. [Risk Register](#risk-register)
-14. [Appendix: Research Sources](#appendix-research-sources)
+8. [Phase 0: Pre-Build Lock](#phase-0-pre-build-lock)
+9. [Phase 1: Calibration Study](#phase-1-calibration-study)
+10. [Phase 1.5: Retrospective Sanity Check](#phase-15-retrospective-sanity-check)
+11. [Phase 2: Paper Trading](#phase-2-paper-trading)
+12. [Phase 3: Live Trading](#phase-3-live-trading)
+13. [Phase 4: Productization](#phase-4-productization)
+14. [Technical Reference](#technical-reference)
+15. [Risk Register](#risk-register)
+16. [Appendix A: Research Sources](#appendix-a-research-sources)
+17. [Appendix B: Future Modules](#appendix-b-future-modules)
+18. [Document History](#document-history)
 
 ---
 
@@ -51,6 +58,22 @@ Phase 1 costs ~$50 and 2-4 weeks. It answers a single falsifiable question: **"F
 If Phase 1 fails, the document beyond the Phase 1 section is irrelevant. If Phase 1 succeeds, we have the most important thing: **data, not arguments.**
 
 **False-confidence detection is not optional.** LLM agents may produce persuasive reports with weak accuracy, cluster near 50%, or converge too fast to informative disagreement. Phase 1 explicitly tracks these failure modes separately from the core hypothesis test (see § Simulation Stability Diagnostics). A simulation that "sounds right" but systematically misfires is worse than one that predicts poorly — it builds false confidence that degrades every downstream decision.
+
+### Phase 1 Trading Lock
+
+Phase 1 must not include:
+
+- wallet private keys
+- Polymarket trading API keys
+- Kalshi trading API keys
+- order placement code
+- live execution paths
+- automated buy/sell actions
+- position sizing connected to real capital
+
+Phase 1 is a calibration study only. The system may read market data, store prices, run simulations, and compute accuracy metrics. It must not trade.
+
+Execution code is forbidden until Gate G2b is passed.
 
 ---
 
@@ -376,10 +399,10 @@ These barriers compound, not add. The set of people who can overcome ALL of them
 │                          PROPHET SYSTEM                              │
 │                                                                      │
 │  ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐   │
-│  │ NARRATIVE       │   │ MARKET LENS     │   │ DIVERGENCE      │   │
-│  │ ENGINE          │──▶│                 │──▶│ CALCULATOR      │   │
-│  │                 │   │                 │   │                 │   │
-│  │ MiroFish/OASIS  │   │ Polymarket APIs │   │ sim probability │   │
+│  │ NARRATIVE       │   │ MARKET LENS     │   │ FORECAST        │   │
+│  │ ENGINE          │──▶│                 │──▶│ COMPARISON      │   │
+│  │                 │   │                 │   │ ENGINE           │   │
+│  │ MiroFish/OASIS  │   │ Polymarket APIs │   │ sim probability  │   │
 │  │ agent swarm     │   │ + Kalshi APIs   │   │ vs              │   │
 │  │ simulation      │   │                 │   │ market price    │   │
 │  │                 │   │ market prices   │   │                 │   │
@@ -389,23 +412,42 @@ These barriers compound, not add. The set of people who can overcome ALL of them
 │                                                       │             │
 │                       ┌───────────────────────────────┘             │
 │                       ▼                                              │
-│  ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐   │
-│  │ EXECUTION       │   │ LEARNING LOOP   │   │ DASHBOARD       │   │
-│  │ ENGINE          │──▶│                 │   │                 │   │
-│  │                 │   │                 │   │ active sims     │   │
-│  │ Kelly sizing    │   │ sim vs actual   │   │ open positions  │   │
-│  │ order placement │   │ resolution      │   │ PnL tracker     │   │
-│  │ position mgmt   │   │                 │   │ calibration     │   │
-│  │ risk limits     │   │ Brier scores    │   │ metrics         │   │
-│  │                 │   │ → calibrate sim │   │ divergence map  │   │
-│  └─────────────────┘   └─────────────────┘   └─────────────────┘   │
+│  ┌─────────────────┐   ┌─────────────────────────┐   ┌────────────┐ │
+│  │ TRADING MODULE  │   │ RESOLUTION +            │   │ CALIBRATION│ │
+│  │ [FUTURE - Ph 3] │──▶│ CALIBRATION ENGINE      │   │ DASHBOARD  │ │
+│  │                 │   │                         │   │            │ │
+│  │ (Not in Ph 1/2) │   │ sim vs actual resolution│   │ active sims│ │
+│  │                 │   │                         │   │ calibration│ │
+│  │                 │   │ Brier scores            │   │ metrics    │ │
+│  │                 │   │ → calibrate everything  │   │ divergence │ │
+│  └─────────────────┘   └─────────────────────────┘   └────────────┘ │
 │                                                                      │
 │  ┌─────────────────────────────────────────────────────────────┐    │
 │  │                    DATA LAYER (Postgres + Redis + Qdrant)    │    │
-│  │  simulations | markets | positions | resolutions | feedback  │    │
+│  │  events | snapshots | seeds | simulations | resolutions     │    │
+│  │  diagnostics | calibration | [paper_trades - Phase 2+]      │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+### Layer Activation by Phase
+
+| Layer | Phase 0 | Phase 1 | Phase 1.5 | Phase 2 | Phase 3 |
+|---|---:|---:|---:|---:|---:|
+| Market Scanner | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Seed Builder | ⚠️ Manual test | ✅ | ✅ | ✅ | ✅ |
+| Narrative Engine | ✅ Test only | ✅ | ✅ | ✅ | ✅ |
+| Probability Parser | ✅ Test only | ✅ | ✅ | ✅ | ✅ |
+| Forecast Comparison Engine | ❌ | ✅ Logging only | ✅ | ✅ Active | ✅ Active |
+| Resolution Monitor | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Calibration Engine | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Paper Trading Engine | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Live Trading Module | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Calibration Dashboard | ❌ | Minimal report only | Minimal report only | Minimal | Full |
+
+✅ Phase 1 Active: market data, seed construction, simulation, probability parsing, forecast comparison, resolution tracking, calibration reporting.
+
+🔒 Phase 1 Locked: trading module, wallet integration, order placement, live execution, PnL dashboard.
 
 ### Layer 1: Narrative Engine (MiroFish / OASIS)
 
@@ -414,7 +456,7 @@ These barriers compound, not add. The set of people who can overcome ALL of them
 **Inputs:**
 - Seed document (news article, policy draft, earnings report, event description)
 - Simulation parameters (agent count, rounds, platforms, prompt recipe)
-- Historical calibration data for this event type (from Learning Loop)
+- Historical calibration data for this event type (from Calibration Engine)
 
 **Process:**
 1. GraphRAG extracts entities, relationships, tensions from seed document
@@ -437,6 +479,58 @@ These barriers compound, not add. The set of people who can overcome ALL of them
 - Simulation triggered via Python subprocess or REST API call
 
 **Cost Estimate:** $2-5 per full simulation (Flash for agents, Pro for report). For 10-event checkpoint: $20-50. For full 20-event calibration study: $40-100 total API cost.
+
+#### ReportAgent Structured Output Contract
+
+Every simulation report must end with a strict JSON block:
+
+```json
+{
+  "forecast_probability_yes": 0.64,
+  "forecast_confidence": 0.58,
+  "forecast_direction": "YES",
+  "main_reason": "Short explanation of the dominant causal logic.",
+  "key_uncertainties": [
+    "Uncertainty 1",
+    "Uncertainty 2"
+  ],
+  "agent_disagreement_summary": "Summary of where agents disagreed.",
+  "dominant_narrative": "The main narrative that emerged.",
+  "contrarian_narrative": "The strongest opposing narrative.",
+  "probability_rationale": "Why this probability was chosen instead of market price."
+}
+```
+
+Rules:
+- `forecast_probability_yes` must be a decimal between `0.00` and `1.00`.
+- `forecast_confidence` is logged but excluded from decisions until validated.
+- JSON must be machine-parseable.
+- If JSON parsing fails, the simulation run is marked `failed_parse`.
+- No manual probability correction is allowed.
+
+#### Probability Parser Fallback
+
+If MiroFish cannot force structured JSON output, Prophet uses a second-stage probability parser.
+
+Allowed parse methods:
+
+| Method | Priority | Notes |
+|---|---:|---|
+| Native ReportAgent JSON | 1 | Preferred |
+| Regex extraction | 2 | Only if output format is stable |
+| LLM extractor | 3 | Acceptable but must be versioned |
+| Manual extraction | Forbidden | Would contaminate calibration data |
+
+The parser must return:
+
+```json
+{
+  "forecast_probability_yes": 0.64,
+  "forecast_confidence": 0.58,
+  "parse_method": "llm_extractor",
+  "parse_success": true
+}
+```
 
 ### Layer 2: Market Lens (Polymarket + Kalshi APIs)
 
@@ -465,7 +559,7 @@ These barriers compound, not add. The set of people who can overcome ALL of them
 - Resolution data (outcome, resolution time, disputes if any)
 - Volume and liquidity at simulation time
 
-### Layer 3: Divergence Calculator
+### Layer 3: Forecast Comparison Engine
 
 **Purpose:** Compare simulation probability against market probability, compute conviction score.
 
@@ -501,51 +595,13 @@ WHERE:
 | 0.10 - 0.15 | Consider paper trade |
 | > 0.15 | Trade signal (paper or live, depending on phase) |
 
-### Layer 4: Execution Engine
+### Layer 4: Trading Module [FUTURE — Phase 3 Only]
 
-**Purpose:** Translate conviction signals into sized, placed, and monitored positions.
+See [Appendix B: Future Modules](#appendix-b-future-modules). No code for this module should exist in the codebase until Gate G2b is passed.
 
-**Position Sizing (Kelly Criterion, fractional):**
+Phase 1-2 uses only paper positions logged in `prophet.paper_trades`. No order placement, no wallet keys, no live execution.
 
-```
-edge = |sim_probability - market_probability|
-odds = market_probability / (1 - market_probability)  # for YES positions
-kelly_fraction = edge - ((1 - edge) / odds)
-position_size = bankroll × (kelly_fraction × risk_multiplier)
-
-WHERE:
-  risk_multiplier: 0.25 (quarter-Kelly - conservative)
-  max_position: 5% of bankroll (hard cap)
-  min_position: 0.1% of bankroll (noise floor)
-```
-
-**Order Execution (Polymarket CLOB):**
-
-```python
-from py_clob_client import ClobClient
-from py_clob_client.clob_types import OrderArgs
-
-# Place limit order at mid-market or slightly better
-order = client.create_and_post_order(OrderArgs(
-    token_id=token_id,
-    price=limit_price,    # mid-market or better
-    size=position_size,   # USDC amount
-    side="BUY"            # BUY or SELL
-))
-
-# Monitor via WebSocket for fills
-# Exit conditions: resolution OR conviction collapse OR stop-loss
-```
-
-**Risk Controls:**
-- Max single-event exposure: 5% of bankroll
-- Max concurrent positions: 10
-- Max daily loss: 3% of bankroll (circuit breaker)
-- Stop-loss: exit if conviction drops >50% from entry
-- Resolution-only exit: hold unless stop-loss triggered (long-term events)
-- No leverage, no margin, spot USDC only
-
-### Layer 5: Learning Loop
+### Layer 5: Resolution + Calibration Engine
 
 **Purpose:** Transform every resolved event into calibration data that improves future simulations.
 
@@ -558,8 +614,8 @@ simulation_id
 ├── market_probability_at_sim: 0.58
 ├── market_probability_at_resolution: 1.0 (if YES)
 ├── actual_outcome: YES
-├── event_type: political_election
-├── event_subtype: presidential_primary
+├── event_type: crypto_protocol
+├── event_subtype: blockchain_upgrade
 ├── days_to_resolution: 14
 ├── simulation_params: {agents: 500, rounds: 10, model: flash}
 ├── seed_doc_hash: abc123
@@ -584,24 +640,35 @@ simulation_id
 
 **Feedback Mechanism:**
 - Every resolved event updates calibration curves
-- Conviction Calculator parameters auto-tune based on rolling 20-event window
+- Forecast Comparison Engine parameters auto-tune based on rolling 20-event window
 - Simulation prompt recipes updated when specific event types underperform
 - Agent count/rounds adjusted based on cost-benefit per event type
 
-### Layer 6: Dashboard
+### Layer 6: Calibration Dashboard
 
-**Purpose:** Visualize the entire system state - simulations, markets, positions, and calibration metrics.
+**Purpose:** Visualize calibration metrics — simulations, markets, forecast comparisons.
 
-**Views:**
+#### Dashboard Deferral Rule
 
-| View | Content |
-|---|---|
-| **Active Simulations** | Running sims, progress, preliminary probabilities |
-| **Open Positions** | Current holdings, entry price, current PnL, conviction score |
-| **Market Monitor** | Tracked events, market prices, simulation estimates, delta |
-| **Calibration** | Brier scores by event type, directional accuracy over time, confidence calibration plots |
-| **PnL Tracker** | Cumulative PnL, win rate, Sharpe ratio, max drawdown |
-| **Event Explorer** | Browse active Polymarket events, filter by category/volume, trigger simulation |
+No full dashboard is built until Prophet has generated a complete 10-event calibration report. Before that point, outputs are limited to:
+
+- CLI logs
+- database rows
+- Markdown reports
+- CSV exports
+
+A dashboard can make the project feel mature before the data is mature. UI work is deferred until the calibration pipeline works.
+
+**Views (all Phase 3+ unless noted):**
+
+| View | Content | Active By |
+|---|---|---|
+| **Active Simulations** | Running sims, progress, preliminary probabilities | Phase 1 |
+| **Market Monitor** | Tracked events, market prices, simulation estimates, delta | Phase 1 |
+| **Calibration** | Brier scores by event type, directional accuracy over time, confidence calibration plots | Phase 1 |
+| **Event Explorer** | Browse active Polymarket events, filter by category/volume, trigger simulation | Phase 1 |
+| **Future Position View** | Current holdings, entry price, PnL | Phase 3+ |
+| **Future PnL Tracker** | Cumulative PnL, win rate, Sharpe ratio, max drawdown | Phase 3+ |
 
 ---
 
@@ -630,9 +697,9 @@ Every simulation, every resolution, every trade is logged. This dataset is the m
 Each layer is independently testable:
 - Narrative Engine: `input(seed_doc) → output(probability, confidence, report)`
 - Market Lens: `input(event_id) → output(price, volume, history)`
-- Divergence Calculator: `input(sim_prob, market_prob, metadata) → output(conviction)`
-- Execution Engine: `input(conviction, event_id, market) → output(position_id)`
-- Learning Loop: `input(resolution_data) → output(updated_calibration_curves)`
+- Forecast Comparison Engine: `input(sim_prob, market_prob, metadata) → output(conviction)`
+- Trading Module: `input(conviction, event_id, market) → output(position_id)` [Phase 3+]
+- Resolution + Calibration Engine: `input(resolution_data) → output(updated_calibration_curves)`
 
 **5. Cheap Models for Agents, Expensive for Synthesis**
 
@@ -645,6 +712,30 @@ Polymarket requires no KYC, no geographic restriction (for non-US), public APIs 
 **7. Favor Asynchronous Over Real-Time**
 
 MiroFish simulations take minutes to hours, not milliseconds. This is correct - the edge is narrative depth, not speed. Events resolve in days to weeks. Batch simulations overnight. Compare to market prices the next morning.
+
+### Reproducibility Requirements
+
+Every simulation run must store:
+
+- seed document hash
+- source URLs
+- market snapshot timestamp
+- model name for agents
+- model name for report synthesis
+- model provider
+- temperature
+- max tokens, if available
+- agent count
+- round count
+- random seed
+- prompt template version
+- agent persona version
+- ReportAgent prompt version
+- parser version
+- MiroFish commit hash or version
+- Prophet pipeline commit hash
+
+A simulation result that cannot be reproduced is not valid calibration data.
 
 ### What We Measure (and What We Ignore)
 
@@ -667,11 +758,68 @@ MiroFish simulations take minutes to hours, not milliseconds. This is correct - 
 
 | Gate | Question | Criteria | Action if Pass | Action if Fail |
 |---|---|---|---|---|
+| **G0** | Is MiroFish integration contract verified? | 3 manual simulations run, endpoints documented, probability extraction strategy confirmed | Proceed to pipeline development | Debug MiroFish deployment, inspect `/docs`, reverse-engineer frontend calls, or consider browser/file-system automation fallback |
 | **G1** | Can we run MiroFish on our infra? | Successful simulation with 100+ agents | Proceed to event selection | Debug deployment |
 | **G2a** | Does sim show signal in one narrow category? | Sim Brier < Market Brier on 10 crypto/regulatory narrative events | Expand to 20 events | Analyze failure patterns, check stability diagnostics |
 | **G2b** | Does signal hold at scale? | Sim Brier < Market Brier on 20 single-category events AND directional accuracy > 55% | Proceed to Phase 2 | Abandon or re-scope to different category |
 | **G3** | Do paper trades show positive expectancy? | Sharpe > 0.5 on 50 paper trades ⚠️ 50 trades is too few for a statistically reliable Sharpe ratio (~±0.5 confidence interval). Treat as directional signal, not a validated metric. Proceed only if supporting metrics (win rate, profit factor) also point in the same direction. | Proceed to Phase 3 | Tune conviction thresholds |
-| **G4** | Do live trades maintain paper performance? | 50 live trades with Sharpe > 0.5 | Evaluate Phase 4 product direction(s) | Revert to paper, investigate slippage/latency |
+| **G4** | Do live trades maintain paper performance? | 100+ resolved calibration events, positive Brier edge sustained, directional accuracy > 55%, stable diagnostics, paper edge positive after fees/slippage, Sharpe > 0.5 on paper (directional only), no manual probability corrections | Evaluate Phase 4 product direction(s) | Revert to paper, investigate slippage/latency |
+
+---
+
+## Phase 0: Pre-Build Lock
+
+**Duration:** 1–3 days
+**Capital at Risk:** $0
+**Goal:** Prove that Prophet can run one complete seed-to-report workflow before building the full calibration pipeline.
+
+Phase 0 answers five questions:
+
+1. Can MiroFish run reliably on the existing ClawBot infrastructure?
+2. Does MiroFish expose a usable backend API?
+3. Can a seed document be submitted programmatically?
+4. Can ReportAgent return structured probability output?
+5. Can the raw report, structured forecast, simulation config, and seed hash be stored cleanly?
+
+### Phase 0 Required Test
+
+```text
+seed_document.md
+→ MiroFish/OASIS simulation
+→ raw report
+→ structured forecast JSON
+→ saved database row
+```
+
+### Phase 0 Verification Steps
+
+```bash
+curl http://localhost:5001/docs
+curl http://localhost:5001/openapi.json
+```
+
+Then inspect frontend network calls while running one simulation through the UI.
+
+### Phase 0 Exit Criteria
+
+Prophet may enter Phase 1 only if:
+
+* 3 manual simulations complete successfully
+* MiroFish integration method is documented
+* seed submission method is known
+* ReportAgent output format is known
+* probability extraction strategy is confirmed
+* one test result is saved to Postgres
+
+### Phase 0 Failure Paths
+
+| Failure | Meaning | Action |
+|---|---|---|
+| Clean HTTP API exists | Best case | Build `mirofish_runner.py` as API adapter |
+| Backend endpoints exist but are undocumented | Acceptable | Reverse-engineer frontend calls and document local contract |
+| Only UI workflow works | Fragile | Use Playwright/file-system automation only for prototype |
+| MiroFish cannot run reliably | Blocking | Pause Prophet or switch to OASIS-direct integration |
+| ReportAgent cannot output structured probability | Blocking | Add second-stage probability parser |
 
 ---
 
@@ -680,6 +828,19 @@ MiroFish simulations take minutes to hours, not milliseconds. This is correct - 
 **Duration:** 2-4 weeks
 **Capital at Risk:** $0 (observation only)
 **Goal:** Answer "Does MiroFish simulation beat Polymarket crowd prices?"
+
+### Phase 1 Hard Constraints (Non-Negotiable)
+
+1. No wallet keys in the codebase or environment.
+2. No trading API credentials in any config file.
+3. No order placement code anywhere in the repo.
+4. No live execution path of any kind.
+5. Phase 1 output is a calibration report, not a dashboard.
+6. Simulation configs are frozen per run.
+7. No mid-study parameter changes without creating a new prompt/config version.
+8. All market prices must be captured at simulation trigger time.
+9. Failed parses must be logged as failed runs, not manually corrected.
+10. Manual seed edits must be flagged in the database.
 
 ### Step 1.1: Deploy MiroFish
 
@@ -710,119 +871,295 @@ docker compose up -d
 ~/clawbot-v2/prophet/
 ├── pipeline/
 │   ├── __init__.py
-│   ├── market_scanner.py      # Polymarket Gamma API integration
-│   ├── seed_builder.py        # Construct seed docs from SearXNG/news
-│   ├── mirofish_runner.py     # Launch simulation, parse report
-│   ├── divergence.py          # Compare sim vs market
-│   ├── logger.py              # Postgres persistence
-│   └── config.py              # Constants, thresholds
+│   ├── market_scanner.py        # Discover candidate Polymarket events
+│   ├── seed_builder.py          # Build standardized seed docs
+│   ├── mirofish_runner.py       # Submit seeds, retrieve reports
+│   ├── probability_parser.py    # Extract structured probability JSON
+│   ├── forecast_comparison.py   # Compare sim vs market, compute accuracy
+│   ├── resolution_monitor.py    # Daily check on unresolved events
+│   ├── calibration_report.py    # Generate Phase 1 markdown report
+│   ├── logger.py                # Write everything to Postgres
+│   └── config.py                # Constants, thresholds
 ├── sql/
-│   └── schema.sql             # Simulations + resolutions tables
+│   └── schema.sql
+├── reports/
+│   └── phase_1_calibration_report.md
+├── seeds/
+│   └── sample_seed.md
 ├── tests/
-│   └── test_pipeline.py
-└── run_calibration.py         # Main entry point
+│   ├── test_market_scanner.py
+│   ├── test_seed_builder.py
+│   ├── test_probability_parser.py
+│   └── test_forecast_comparison.py
+└── run_calibration.py           # Main entry point
 ```
 
 **Key Scripts:**
 
-`market_scanner.py` - Discovers active Polymarket events suitable for simulation:
-- Filter: active=true, volume > $50K, binary outcomes
-- Exclude: sports (retail-dominated, different dynamics), events <7 days to resolution, events at >95% probability
-- Return: event_id, title, outcomes, current prices, volume, category, resolution date
+`market_scanner.py` — discovers candidate Polymarket events and captures market snapshots.
 
-`seed_builder.py` - Constructs seed documents from news sources:
-- For each target event, search SearXNG for related news articles
-- If SearXNG returns <3 results, fall back to web_search (Perplexity) or manual web_fetch from known sources (e.g., Reuters, Politico, CoinDesk depending on category)
-- Extract key facts, stakeholder positions, timeline, disputed claims
-- Assemble into structured seed document (markdown)
-- Include: event context, key actors, current state, what's at stake, uncertainty factors
+`seed_builder.py` — builds standardized seed documents from source material.
 
-`mirofish_runner.py` - Launches simulations and parses output:
-- POST seed document to MiroFish backend API
-- Wait for simulation completion (poll or webhook)
-- Parse ReportAgent output to extract probability, confidence, narrative summary
-- Store full simulation log for audit
+`mirofish_runner.py` — submits seed documents to MiroFish/OASIS and retrieves raw reports.
 
-`logger.py` - Persists everything to Postgres:
-- Simulation runs (input, output, timing, cost)
-- Market snapshots (prices at simulation time)
-- Resolution tracking (outcome, timing, disputes)
+`probability_parser.py` — extracts structured probability JSON from ReportAgent output.
+
+`forecast_comparison.py` — compares simulation probability with market probability and computes accuracy after resolution.
+
+`resolution_monitor.py` — scheduled daily job that checks unresolved events and writes outcomes to `prophet.resolutions`.
+
+`calibration_report.py` — generates the Phase 1 markdown report.
+
+`logger.py` — writes events, seeds, simulation runs, diagnostics, resolutions, and calibration results to Postgres.
+
+#### Seed Document Template
+
+Every seed document must follow this structure:
+
+```md
+# Event Seed Document
+
+## Market Question
+[Exact Polymarket question]
+
+## Resolution Criteria
+[Exact platform resolution rules]
+
+## Current Market State
+- YES price:
+- NO price:
+- Volume:
+- Liquidity:
+- Snapshot time:
+
+## Key Facts
+- Fact 1
+- Fact 2
+- Fact 3
+
+## Timeline
+- Date: Event
+- Date: Event
+
+## Stakeholders
+| Stakeholder | Incentive | Likely Position |
+|---|---|---|
+
+## Current Narratives
+
+### YES Narrative
+[Why YES may happen]
+
+### NO Narrative
+[Why NO may happen]
+
+## Key Uncertainties
+- Uncertainty 1
+- Uncertainty 2
+
+## Source List
+- URL 1
+- URL 2
+- URL 3
+
+## Seed Builder Notes
+- Search method:
+- Manual edits:
+- Source count:
+- Seed hash:
+```
+
+#### Seed Source Fallback Chain
+
+Fallback chain for seed document sources:
+
+1. **SearXNG** — primary, self-hosted at `localhost:8088`
+2. **Tavily API or Brave Search API** — programmatic fallback
+3. **Manual seed construction** — allowed only if flagged with `manual_edits = true` and `seed_quality = "manual"`
+
+Perplexity is not treated as a programmatic fallback unless a real API key and implementation are added.
 
 ### Step 1.3: Database Schema
 
 ```sql
--- Core simulation tracking
-CREATE TABLE prophet.simulations (
+CREATE SCHEMA IF NOT EXISTS prophet;
+
+-- Core event tracking
+CREATE TABLE prophet.events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id VARCHAR(255) NOT NULL,            -- Polymarket event ID
+    external_market_id VARCHAR(255) NOT NULL,
+    platform VARCHAR(50) NOT NULL DEFAULT 'polymarket',
     market_title TEXT NOT NULL,
     market_url TEXT,
-    category VARCHAR(100),                     -- politics, crypto, macro, etc.
+    category VARCHAR(100),
+    event_type VARCHAR(100),
+    resolution_criteria TEXT,
+    expected_resolution_time TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
-    -- Market state at simulation time
-    polymarket_price_yes DECIMAL(5,4),         -- e.g., 0.5800
-    polymarket_volume_usd DECIMAL(15,2),
-    polymarket_liquidity_usd DECIMAL(15,2),
-    market_snapshot_at TIMESTAMPTZ,
+-- Market state at exact timestamps
+CREATE TABLE prophet.market_snapshots (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID REFERENCES prophet.events(id),
+    price_yes DECIMAL(5,4),
+    price_no DECIMAL(5,4),
+    volume_usd DECIMAL(15,2),
+    liquidity_usd DECIMAL(15,2),
+    orderbook_spread DECIMAL(8,4),
+    snapshot_at TIMESTAMPTZ DEFAULT NOW()
+);
 
-    -- Simulation outputs
-    mirofish_probability DECIMAL(5,4),         -- e.g., 0.7200
-    mirofish_confidence DECIMAL(5,4),          -- 0-1 self-assessed confidence
-    mirofish_raw_report TEXT,                  -- Full ReportAgent output
-    simulation_params JSONB,                   -- agents, rounds, model, prompt_recipe
+-- Seed document provenance
+CREATE TABLE prophet.seeds (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID REFERENCES prophet.events(id),
+    seed_doc_text TEXT NOT NULL,
+    seed_doc_hash VARCHAR(64) NOT NULL,
+    source_urls JSONB,
+    source_count INTEGER,
+    source_time_window TEXT,
+    seed_builder_version VARCHAR(50),
+    seed_quality VARCHAR(50),
+    manual_edits BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Simulation execution records
+CREATE TABLE prophet.simulation_runs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID REFERENCES prophet.events(id),
+    seed_id UUID REFERENCES prophet.seeds(id),
+    market_snapshot_id UUID REFERENCES prophet.market_snapshots(id),
+
+    forecast_probability_yes DECIMAL(5,4),
+    forecast_confidence DECIMAL(5,4),
+    forecast_direction VARCHAR(10),
+    raw_report TEXT,
+    structured_forecast JSONB,
+
+    model_name_agents VARCHAR(100),
+    model_name_report VARCHAR(100),
+    prompt_template_version VARCHAR(50),
+    agent_persona_version VARCHAR(50),
+    report_agent_prompt_version VARCHAR(50),
+    report_parser_version VARCHAR(50),
+    temperature_agents DECIMAL(4,3),
+    temperature_report DECIMAL(4,3),
+    agent_count INTEGER,
+    round_count INTEGER,
+    random_seed VARCHAR(100),
+    mirofish_version VARCHAR(100),
+    prophet_commit_hash VARCHAR(100),
+
     simulation_duration_sec INTEGER,
     simulation_cost_estimate DECIMAL(8,4),
-
-    -- Derived
-    raw_delta DECIMAL(5,4),                    -- sim - market
-    event_type VARCHAR(50),
-    seed_doc_hash VARCHAR(64),
+    run_status VARCHAR(50) DEFAULT 'completed',
+    error_message TEXT,
 
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Resolution tracking
-CREATE TABLE prophet.resolutions (
+-- Stability diagnostics per simulation batch
+CREATE TABLE prophet.stability_diagnostics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    simulation_id UUID REFERENCES prophet.simulations(id),
+    event_id UUID REFERENCES prophet.events(id),
 
-    -- Actual outcome
-    actual_outcome BOOLEAN,                    -- TRUE = YES resolved, FALSE = NO
-    resolution_time TIMESTAMPTZ,
-    resolution_source TEXT,                    -- polymarket, manual, etc.
-    disputed BOOLEAN DEFAULT FALSE,
+    diagnostic_window INTEGER DEFAULT 3,
+    probability_iqr DECIMAL(5,4),
+    same_seed_variance DECIMAL(8,6),
+    convergence_round INTEGER,
+    cross_model_probability_delta DECIMAL(5,4),
+    cross_model_correlation DECIMAL(5,4),
 
-    -- Accuracy metrics
-    sim_was_correct BOOLEAN,                   -- sim_prob > 0.5 matched outcome?
-    market_was_correct BOOLEAN,                -- market > 0.5 matched outcome?
-    sim_brier_score DECIMAL(8,6),              -- (prob - outcome)^2
-    market_brier_score DECIMAL(8,6),
-    sim_better_than_market BOOLEAN,
-    delta_direction_correct BOOLEAN,           -- sim pointed in right direction vs market
+    hedging_flag BOOLEAN DEFAULT FALSE,
+    high_variance_flag BOOLEAN DEFAULT FALSE,
+    fast_convergence_flag BOOLEAN DEFAULT FALSE,
+    persuasive_wrong_flag BOOLEAN DEFAULT FALSE,
+    model_sensitivity_flag BOOLEAN DEFAULT FALSE,
 
-    resolved_at TIMESTAMPTZ DEFAULT NOW()
+    diagnostic_status VARCHAR(20),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Calibration aggregates (materialized per event type)
-CREATE TABLE prophet.calibration (
+-- Actual outcomes
+CREATE TABLE prophet.resolutions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_type VARCHAR(50) UNIQUE,
-    event_count INTEGER DEFAULT 0,
-    sim_accuracy DECIMAL(5,4),                 -- % correct at >0.5 threshold
-    market_accuracy DECIMAL(5,4),
-    sim_mean_brier DECIMAL(8,6),
-    market_mean_brier DECIMAL(8,6),
-    directional_accuracy DECIMAL(5,4),         -- % sim points in right direction
-    mean_confidence DECIMAL(5,4),              -- for calibration curve
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    event_id UUID REFERENCES prophet.events(id),
+
+    actual_outcome BOOLEAN,
+    resolution_time TIMESTAMPTZ,
+    resolution_source TEXT,
+    disputed BOOLEAN DEFAULT FALSE,
+    resolution_notes TEXT,
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Per-event calibration accuracy
+CREATE TABLE prophet.calibration_results (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    simulation_run_id UUID REFERENCES prophet.simulation_runs(id),
+    resolution_id UUID REFERENCES prophet.resolutions(id),
+
+    market_brier_score DECIMAL(8,6),
+    simulation_brier_score DECIMAL(8,6),
+    simulation_better_than_market BOOLEAN,
+    market_was_correct BOOLEAN,
+    simulation_was_correct BOOLEAN,
+    delta_direction_correct BOOLEAN,
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Phase 2 only
+CREATE TABLE prophet.paper_trades (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID REFERENCES prophet.events(id),
+    simulation_run_id UUID REFERENCES prophet.simulation_runs(id),
+
+    sim_probability DECIMAL(5,4),
+    market_price_at_entry DECIMAL(5,4),
+    conviction_score DECIMAL(6,4),
+    direction VARCHAR(10),
+
+    kelly_sized_position DECIMAL(12,2),
+    market_price_at_resolution DECIMAL(5,4),
+    paper_pnl DECIMAL(12,2),
+    paper_return_pct DECIMAL(8,4),
+    won BOOLEAN,
+
+    entry_timestamp TIMESTAMPTZ,
+    exit_timestamp TIMESTAMPTZ,
+    exit_reason VARCHAR(100),
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Indexes
-CREATE INDEX idx_simulations_event_id ON prophet.simulations(event_id);
-CREATE INDEX idx_simulations_created ON prophet.simulations(created_at);
-CREATE INDEX idx_simulations_event_type ON prophet.simulations(event_type);
-CREATE INDEX idx_resolutions_sim_id ON prophet.resolutions(simulation_id);
+CREATE INDEX idx_events_external_market_id ON prophet.events(external_market_id);
+CREATE INDEX idx_market_snapshots_event_id ON prophet.market_snapshots(event_id);
+CREATE INDEX idx_seeds_event_id ON prophet.seeds(event_id);
+CREATE INDEX idx_simulation_runs_event_id ON prophet.simulation_runs(event_id);
+CREATE INDEX idx_stability_event_id ON prophet.stability_diagnostics(event_id);
+CREATE INDEX idx_resolutions_event_id ON prophet.resolutions(event_id);
+CREATE INDEX idx_calibration_results_run_id ON prophet.calibration_results(simulation_run_id);
+CREATE INDEX idx_paper_trades_event_id ON prophet.paper_trades(event_id);
 ```
+
+**Schema design principle:**
+
+- `events` stores the market/event being tracked.
+- `market_snapshots` stores price and liquidity at exact timestamps.
+- `seeds` stores input documents and source provenance.
+- `simulation_runs` stores each simulation execution. Multiple runs per event are expected.
+- `stability_diagnostics` stores failure-mode checks across reruns/models.
+- `resolutions` stores ground truth.
+- `calibration_results` stores forecast accuracy.
+- `paper_trades` is Phase 2-only and must not be used in Phase 1.
+
+**Atomic upsert note:** Calibration aggregates must be computed from `calibration_results` or updated using atomic Postgres `INSERT ... ON CONFLICT DO UPDATE`. Avoid read-then-write updates from Python workers, because concurrent resolution jobs can create race conditions.
 
 ### Step 1.4: Select Target Events — Narrow First, Expand Later
 
@@ -864,12 +1201,13 @@ A strong result on 10 narrow-category events is more informative than a muddy re
 ### Step 1.5: Run and Track
 
 For each event:
-1. Build seed document from current news
-2. Run MiroFish simulation (100-500 agents, 8-12 rounds)
-3. Extract probability + confidence from ReportAgent
-4. Record Polymarket mid-market price at simulation time
-5. Log to Postgres
-6. Monitor for resolution
+1. Build seed document from current news using the seed document template.
+2. **Market Snapshot Timing Rule:** Capture market price at the exact time the simulation is triggered. The comparison baseline is `market_price_at_sim_time`, not the price when the seed was built, when the report was parsed, or at end of day. All Brier comparisons use the market probability from the simulation trigger timestamp.
+3. Run MiroFish simulation (100-500 agents, 8-12 rounds).
+4. Extract probability + confidence via the probability parser (Layer 1 contract).
+5. Record Polymarket mid-market price at simulation time.
+6. Log to Postgres (events, seeds, market_snapshots, simulation_runs, stability_diagnostics).
+7. Monitor for resolution via `resolution_monitor.py`.
 
 ### Step 1.6: Analyze Results
 
@@ -883,13 +1221,30 @@ At 20 resolved events, compute:
 | Directional accuracy (sim vs market disagreements) | > 55% |
 | Sim accuracy (probability > 0.5 matched outcome) | > Market accuracy |
 | Stability diagnostics (5 failure modes) | All must pass (see § Simulation Stability Diagnostics) |
-|"Sim was hedging" check | IQR of sim probabilities > 0.20 |
+| "Sim was hedging" check | IQR of sim probabilities > 0.20 |
 
 **Decision:** If all metrics pass and stability diagnostics are green → Phase 2. If not → analyze failure patterns, iterate on simulation parameters, run next 20 events.
 
 **Disclosure:** Phase 1-2 results are not published, shared, or discussed publicly until G3 is passed. A positive Phase 1 result that becomes public before you've built a trading position is a result you've given away.
 
 *(Cross-reference: see Risk Register R11 — Premature disclosure of Phase 1-2 results.)*
+
+#### Phase 1 Output Artifact
+
+The output of Phase 1 is:
+
+```text
+reports/phase_1_calibration_report.md
+```
+
+The report must include:
+
+| Event | Category | Market Prob | Sim Prob | Actual | Market Brier | Sim Brier | Sim Better? | Stability Flags |
+|---|---|---|---|---|---|---|---|---|
+
+This report — not a dashboard, not a model, not a trading signal — is the deliverable of Phase 1.
+
+Gate G2b passes only if this report shows simulation Brier score beating market Brier score with no major unresolved stability flags.
 
 ### Simulation Stability Diagnostics
 
@@ -921,13 +1276,67 @@ Ambiguous results (sim beats market ~50-65% of events, no clear signal) are the 
 
 ---
 
+## Phase 1.5: Retrospective Sanity Check
+
+**Duration:** 1 week
+**Capital at Risk:** $0
+**Goal:** Expose obvious systematic failures before waiting weeks for live events to resolve.
+
+### Scope
+
+Run Prophet against 3–5 already-resolved events where historical market prices are available.
+
+### Process
+
+1. Select resolved events from the same category used in Phase 1.
+2. Choose a historical simulation timestamp.
+3. Pull historical market probability at that timestamp using price history.
+4. Reconstruct the seed document using only information available before that timestamp.
+5. Run the simulation.
+6. Compare simulation probability, historical market probability, and actual outcome.
+
+### Anti-Leakage Rule
+
+Historical replay is valid only if the seed document excludes information published after the chosen simulation timestamp. Any event with possible information leakage is excluded.
+
+### Interpretation
+
+Phase 1.5 is a sanity check, not final validation. It can reveal:
+
+- regression to 50%
+- obvious model instability
+- poor seed reconstruction
+- systematic wrong-way forecasts
+- sensitivity to source selection
+
+### Pass Condition
+
+Prophet may proceed to Phase 2 only if:
+
+- Phase 1 live results are positive or directionally useful
+- Phase 1.5 does not contradict Phase 1
+- no major stability diagnostics fail
+
+---
+
 ## Phase 2: Paper Trading
+
+Phase 2 begins only after:
+
+1. Gate G0 passes.
+2. Gate G2a produces a complete 10-event calibration report.
+3. Gate G2b confirms the result across 20 events if the 10-event result is positive.
+4. Simulation Brier score beats market Brier score.
+5. Directional accuracy is above 55%.
+6. Stability diagnostics are green or explainable.
+7. Phase 1.5 retrospective sanity check does not contradict the live result.
+8. All Phase 1 data is stored in Postgres and reproducible.
 
 **Duration:** 2-4 weeks
 **Capital at Risk:** $0 (simulated trading only)
 **Goal:** "If we had traded on divergence signals, what would the returns be?"
 
-### Step 2.1: Divergence Calculator
+### Step 2.1: Forecast Comparison Engine
 
 Implement full conviction scoring (see Architecture Layer 3).
 
@@ -981,30 +1390,20 @@ Use paper trading data to tune:
 **Capital at Risk:** Small (initial: $500-$1000 USDC)
 **Goal:** Validate that paper performance translates to live execution.
 
+Gate G4 unlock requires all of:
+
+- 100+ resolved calibration events
+- positive Brier edge over market sustained across event batches
+- directional accuracy > 55% sustained
+- stable simulation diagnostics with no systematic red flags
+- paper trading edge positive after estimated fees and slippage
+- Sharpe > 0.5 on paper trades, treated only as directional evidence
+- no unresolved data-quality issues in seed provenance
+- no manual probability corrections in the dataset
+
 ### Step 3.1: Polymarket CLOB Integration
 
-```python
-from py_clob_client import ClobClient
-from py_clob_client.clob_types import OrderArgs, OrderType
-
-# Initialize authenticated CLOB client
-client = ClobClient(
-    host="https://clob.polymarket.com",
-    chain=CHAIN_ID,  # Polygon: 137
-    signer=wallet_client,
-    creds=api_credentials,
-    signature_type=0,  # EOA
-)
-
-# Place order
-order = client.create_and_post_order(OrderArgs(
-    token_id=token_id,
-    price=limit_price,
-    size=size,
-    side="BUY",
-    order_type=OrderType.GTC,  # Good-til-cancelled
-))
-```
+See [Appendix B: Future Modules](#appendix-b-future-modules). Order placement code is not written until Gate G2b passes.
 
 ### Step 3.2: Risk Limits
 
@@ -1021,7 +1420,6 @@ order = client.create_and_post_order(OrderArgs(
 ### Step 3.3: Monitoring
 
 - Track every trade in Postgres
-- Real-time PnL dashboard
 - Compare live vs paper execution (slippage analysis)
 - Alert on circuit breaker triggers
 
@@ -1040,17 +1438,15 @@ Scale capital only when:
 
 **Trigger:** Phase 3 Sharpe > 1.0 over 100+ live trades with positive expectancy.
 
-**Product directions (not mutually exclusive):**
+Two product paths remain open at Phase 3 exit:
 
-| Path | Description | Market |
-|---|---|---|
-| **Trading signals API** | Simulation-calibrated conviction scores as a subscription API for retail/quant prediction market traders | Narrow but proven if Phase 3 works — competing with FutureSearch, AgentBets |
-| **Decision intelligence dashboard** | Scenario-calibrated forecasting for narrative-heavy events (product launches, policy shifts, protocol upgrades, regulatory rulings) sold to enterprises, crypto foundations, political campaigns | Wider TAM, less dependent on live-trading edge — the first product Prophet could ship without validation from the full pipeline |
-| **Autonomous fund** | Scaled capital deployment across Polymarket, Kalshi, and emerging prediction market venues | Highest capital requirement, most regulatory complexity, but pure alpha exposure if the edge compounds |
+**Path A: Calibration-backed scenario intelligence**
+Decision tool for narrative-heavy events such as product launches, regulatory decisions, protocol upgrades, policy shifts, and company controversies. More defensible, faster to market, less dependent on direct trading edge.
 
-**Recommendation:** The decision-intelligence path is the most defensible first product. It leverages the same calibration data as the trading path but addresses a broader, less competitive market. The trading signals path is a natural second product once calibration data exists.
+**Path B: Trading signals / autonomous fund**
+Higher ceiling, longer path, more operational and regulatory complexity. Includes simulation-calibrated conviction scores as a subscription API for prediction market traders, or a scaled autonomous fund.
 
-**Decision deferred until Phase 3 data exists.** Designing products before you have calibration data is writing a pitch deck for a company that may not exist.
+Neither path is committed until Phase 3 data exists. *Designing products before you have calibration data is writing a pitch deck for a company that may not exist.*
 
 ---
 
@@ -1092,17 +1488,15 @@ Scale capital only when:
 ### Cost Model
 
 | Component | Cost | Notes |
-|---|---|---|
-| MiroFish agent reasoning | ~$2/sim (Flash) | 500 agents × 10 rounds × cheap model |
-| ReportAgent synthesis | ~$0.50/sim (Pro) | Single Pro call per simulation |
-| Polymarket market data | Free | No auth required for public endpoints |
-| Polymarket trading fees | 0-1.5% | Fee-free or low-fee markets |
-| Postgres/Redis/Qdrant | $0 (existing) | Already running |
-| Infrastructure | $0 marginal | Existing droplet capacity |
-| **Total per simulation** | **~$2.50** | |
-| **Per simulation** | **~$2.50** | |
-| **Phase 1 checkpoint (10 events)** | **~$25** | API costs only |
-| **Phase 1 total (20 events)** | **~$50** | API costs only |
+|---|---:|---|
+| MiroFish agent reasoning | ~$2/sim | Flash model estimate |
+| ReportAgent synthesis | ~$0.50/sim | Pro model estimate |
+| Polymarket market data | Free | Public endpoints |
+| Postgres/Redis/Qdrant | $0 marginal | Existing infra |
+| Infrastructure | $0 marginal | Existing droplet |
+| **Per simulation** | **~$2.50** | Estimated API cost only |
+| **Phase 1 checkpoint — 10 events** | **~$25** | API costs only |
+| **Phase 1 total — 20 events** | **~$50** | API costs only |
 
 ---
 
@@ -1118,13 +1512,41 @@ Scale capital only when:
 | R6 | Live trading losses exceed risk limits | Medium | Medium | Strict position sizing, circuit breakers, daily loss limits | Halt trading, review all signals |
 | R7 | Event resolution disputes or ambiguity | Medium | Low | Only trade events with clear, unambiguous resolution criteria | Exclude disputed events from calibration |
 | R8 | Agent homogenization degrades simulation quality | Low | Medium | OASIS has built-in diversity mechanisms; monitor agent behavior diversity | Increase agent persona variance, add noise to LLM temperature |
-| R9 | Market moves against position before resolution | High | Low | This is expected - binary options are volatile. Hold to resolution unless stop-loss triggered. | Accept volatility as normal; sizing limits contain damage |
+| R9 | Market moves against position before resolution | High | Low | This is expected — binary options are volatile. Hold to resolution unless stop-loss triggered. | Accept volatility as normal; sizing limits contain damage |
 | R10 | Smart contract risk (Polymarket) | Very Low | High | Use only spot USDC, no leverage; keep funds on platform only when actively trading | Withdraw to wallet between trades |
 | R11 | Premature disclosure of Phase 1-2 results before building a trading position | Low | Very High — gives away the signal before capturing any value | Results not published, shared, or discussed publicly until G3 is passed (enforced in Phase 1.6) | If accidentally disclosed, accelerate to Phase 3 live trading to capitalize before others follow |
 
 ---
 
-## Appendix: Research Sources
+## Required Build Order
+
+Prophet must be built in this order:
+
+1. `PHASE_0_SPEC.md`
+2. `schema.sql`
+3. `market_scanner.py`
+4. `seed_builder.py`
+5. `mirofish_runner.py`
+6. `probability_parser.py`
+7. `logger.py`
+8. `resolution_monitor.py`
+9. `forecast_comparison.py`
+10. `calibration_report.py`
+11. `run_calibration.py`
+
+Explicitly deferred:
+
+- dashboard
+- paper trading
+- live execution
+- wallet integration
+- order placement
+- full product UI
+- Kalshi integration
+
+---
+
+## Appendix A: Research Sources
 
 ### Prediction Markets
 - MEXC Learn: "Best Prediction Market Platforms 2026"
@@ -1173,11 +1595,84 @@ Scale capital only when:
 
 ---
 
+## Appendix B: Future Modules
+
+These modules are not part of Phase 1, Phase 1.5, Phase 2, or early Phase 3. They are documented for reference only.
+
+No code for these modules should exist in the codebase until Gate G2b is passed.
+
+### Future Trading Module
+
+Includes:
+- wallet integration
+- CLOB authentication
+- order placement
+- position sizing
+- live risk controls
+- stop-loss logic
+- live PnL tracking
+
+**Kelly Sizing (reference only):**
+```
+edge = |sim_probability - market_probability|
+odds = market_probability / (1 - market_probability)  # for YES positions
+kelly_fraction = edge - ((1 - edge) / odds)
+position_size = bankroll × (kelly_fraction × risk_multiplier)
+
+WHERE:
+  risk_multiplier: 0.25 (quarter-Kelly - conservative)
+  max_position: 5% of bankroll (hard cap)
+  min_position: 0.1% of bankroll (noise floor)
+```
+
+**Order Execution (Polymarket CLOB):**
+```python
+from py_clob_client import ClobClient
+from py_clob_client.clob_types import OrderArgs
+
+# Place limit order at mid-market or slightly better
+order = client.create_and_post_order(OrderArgs(
+    token_id=token_id,
+    price=limit_price,
+    size=position_size,
+    side="BUY"
+))
+
+# Monitor via WebSocket for fills
+# Exit conditions: resolution OR conviction collapse OR stop-loss
+```
+
+**Risk Controls:**
+- Max single-event exposure: 5% of bankroll
+- Max concurrent positions: 10
+- Max daily loss: 3% of bankroll (circuit breaker)
+- Stop-loss: exit if conviction drops >50% from entry
+- Resolution-only exit: hold unless stop-loss triggered
+- No leverage, no margin, spot USDC only
+
+### Future Dashboard Views
+
+Includes:
+- open positions
+- live PnL
+- realized/unrealized returns
+- slippage analysis
+- capital allocation
+- trade history
+
+### Future Kalshi Integration
+
+Kalshi integration is deferred because Phase 1 does not need regulated trading infrastructure. Polymarket market data is enough for calibration.
+
+---
+
 ## Document History
 
 | Version | Date | Changes |
 |---|---|---|
 | 1.0 | May 11, 2026 | Initial blueprint — complete research synthesis, architecture, roadmap |
+| 1.1 | May 11, 2026 | Reframed Prophet as calibration lab; narrowed Phase 1 to crypto/company/regulatory narrative events; added stability diagnostics |
+| 1.2 | May 12, 2026 | Added Phase 0 integration proof, layer renames, 8-table schema split, seed provenance, simulation versioning, Phase 1 hard constraints, Future Modules appendix, Phase 1.5 retrospective sanity check, resolution monitor, calibration report output, ReportAgent contract, probability parser, seed template, SearXNG fallback fix, gate G0, no-dashboard rule, dashboard deferral rule, required build order, strengthened Phase 2 entry criteria, expanded Gate G4 prerequisites, and fixed duplicate cost rows |
 
 *This is a living document. Version history will grow with the project. All future changes — parameter tuning, implementation decisions, resolved risks — are recorded here.*
 
