@@ -8,9 +8,9 @@
 
 **Author:** ClawBot + Akshar
 **Date:** May 12, 2026
-**Status:** Phase 0 Integration Verified — Probability Parser Pending
+**Status:** Phase 0 Complete — Phase 1 Ready
 **Version:** 1.3
-**Phase 0 Spec:** PHASE_0_SPEC.md — see [Phase 0 Results](#phase-0-results)
+**Phase 0 Spec:** PHASE_0_SPEC.md — Gate G0 fully passed
 
 ---
 
@@ -775,7 +775,7 @@ A simulation result that cannot be reproduced is not valid calibration data.
 
 ### Phase 0 Results
 
-Gate G0 status: **Conditional Pass — integration verified, pending 2 more simulations and parser/storage proof.**
+Gate G0 status: **✅ FULLY PASSED — parser built, schema migrated, end-to-end DB write verified.**
 
 | Requirement | Status |
 |---|---|
@@ -789,7 +789,10 @@ Gate G0 status: **Conditional Pass — integration verified, pending 2 more simu
 | Structured probability native output | ❌ Not supported — LLM extractor required |
 | Probability parser strategy selected | ✅ Confirmed |
 | 3 manual simulations completed | ✅ Pectra, XRP ETF, Anthropic ARR — all 3 pass |
-| Prophet Postgres write tested | ⚠️ Pending parser + schema |
+| Probability parser built and tested | ✅ 5/5 tests pass, all 3 reports parsed |
+| Prophet Postgres schema | ✅ 8 tables migrated, DB write verified |
+| One end-to-end DB write | ✅ event → snapshot → seed → simulation_run with structured_forecast |
+| **Gate G0** | **✅ FULL PASS** |
 
 **Key discovery:** MiroFish backend is **Flask, not FastAPI**. There is no `/docs` or OpenAPI schema. API routes were reverse-engineered from `backend/app/api/`. This changes the integration approach: no auto-generated client, manual API adapter required.
 
@@ -1595,9 +1598,9 @@ Prophet must be built in this order:
 
 1. `PHASE_0_SPEC.md` ✅ Done
 2. Complete 3 MiroFish test simulations ✅ Done (Pectra, XRP ETF, Anthropic ARR)
-3. `probability_parser.py` — test on all 3 reports
-4. `schema.sql` — Prophet Postgres schema
-5. Write one parsed test result into Postgres (Gate G0 fully passed)
+3. `probability_parser.py` ✅ Done — 5/5 tests pass, all 3 reports parsed
+4. `schema.sql` ✅ Done — 8 tables migrated to Postgres
+5. Write one parsed test result into Postgres ✅ Done (Gate G0 fully passed)
 6. `mirofish_runner.py` — MiroFish API adapter
 7. `market_scanner.py` — Polymarket event discovery
 8. `seed_builder.py` — Standardized seed documents
