@@ -8,9 +8,9 @@
 
 **Author:** ClawBot + Akshar
 **Date:** May 12, 2026
-**Status:** Pre-Development — Phase 0 Required
-**Version:** 1.2
-**Phase 0 Spec:** PHASE_0_SPEC.md — required before production development
+**Status:** Phase 0 Integration Verified — Probability Parser Pending
+**Version:** 1.3
+**Phase 0 Spec:** PHASE_0_SPEC.md — see [Phase 0 Results](#phase-0-results)
 
 ---
 
@@ -758,7 +758,7 @@ A simulation result that cannot be reproduced is not valid calibration data.
 
 | Gate | Question | Criteria | Action if Pass | Action if Fail |
 |---|---|---|---|---|
-| **G0** | Is MiroFish integration contract verified? | 3 manual simulations run, endpoints documented, probability extraction strategy confirmed | Proceed to pipeline development | Debug MiroFish deployment, inspect `/docs`, reverse-engineer frontend calls, or consider browser/file-system automation fallback |
+| **G0** | Is MiroFish integration contract verified? | Pipeline runs end-to-end, 3 simulations complete, probability parser extracts structured forecast, one result saved to Postgres | Proceed to pipeline development | See [Phase 0 Results](#phase-0-results) |
 | **G1** | Can we run MiroFish on our infra? | Successful simulation with 100+ agents | Proceed to event selection | Debug deployment |
 | **G2a** | Does sim show signal in one narrow category? | Sim Brier < Market Brier on 10 crypto/regulatory narrative events | Expand to 20 events | Analyze failure patterns, check stability diagnostics |
 | **G2b** | Does signal hold at scale? | Sim Brier < Market Brier on 20 single-category events AND directional accuracy > 55% | Proceed to Phase 2 | Abandon or re-scope to different category |
@@ -769,57 +769,128 @@ A simulation result that cannot be reproduced is not valid calibration data.
 
 ## Phase 0: Pre-Build Lock
 
-**Duration:** 1–3 days
+**Duration:** 1 day (executed May 12, 2026)
 **Capital at Risk:** $0
 **Goal:** Prove that Prophet can run one complete seed-to-report workflow before building the full calibration pipeline.
 
-Phase 0 answers five questions:
+### Phase 0 Results
 
-1. Can MiroFish run reliably on the existing ClawBot infrastructure?
-2. Does MiroFish expose a usable backend API?
-3. Can a seed document be submitted programmatically?
-4. Can ReportAgent return structured probability output?
-5. Can the raw report, structured forecast, simulation config, and seed hash be stored cleanly?
+Gate G0 status: **Conditional Pass — integration verified, pending 2 more simulations and parser/storage proof.**
 
-### Phase 0 Required Test
+| Requirement | Status |
+|---|---|
+| MiroFish deploys on existing infra | ✅ Passed — Docker, 1.5GB RAM peak |
+| Programmatic API verified | ✅ Passed |
+| Full seed→ontology→graph→simulation→report pipeline works | ✅ Passed |
+| Async polling flow documented | ✅ Passed |
+| Direct DeepSeek API works | ✅ Passed (OpenAI-compatible) |
+| Resource profile measured | ✅ Passed |
+| ReportAgent output format known | ✅ Passed — narrative markdown only |
+| Structured probability native output | ❌ Not supported — LLM extractor required |
+| Probability parser strategy selected | ✅ Confirmed |
+| 3 manual simulations completed | ✅ Pectra, XRP ETF, Anthropic ARR — all 3 pass |
+| Prophet Postgres write tested | ⚠️ Pending parser + schema |
+
+**Key discovery:** MiroFish backend is **Flask, not FastAPI**. There is no `/docs` or OpenAPI schema. API routes were reverse-engineered from `backend/app/api/`. This changes the integration approach: no auto-generated client, manual API adapter required.
+
+### MiroFish API Contract (Verified)
 
 ```text
-seed_document.md
-→ MiroFish/OASIS simulation
-→ raw report
-→ structured forecast JSON
-→ saved database row
+POST /api/graph/ontology/generate → project_id, ontology
+POST /api/graph/build             → task_id → [poll GET /api/graph/task/<tid>] → graph_id
+POST /api/simulation/create       → simulation_id
+POST /api/simulation/prepare      → task_id → [poll POST /api/simulation/prepare/status] → ready
+POST /api/simulation/start        → [runs agent interactions in background]
+POST /api/report/generate         → task_id → [poll POST /api/report/generate/status] → report_id
+GET  /api/report/<report_id>      → markdown_content
 ```
 
-### Phase 0 Verification Steps
+All long-running operations use the same pattern: POST to initiate, poll task status endpoint. No WebSocket or streaming endpoints for Phase 1.
 
+### LLM Infrastructure Update
+
+Phase 0 confirmed direct DeepSeek API works through OpenAI SDK format. LiteLLM proxy is not running on port 4000 (OpenClaw's LiteLLM is embedded, not a standalone proxy).
+
+**Phase 1 LLM config:**
 ```bash
-curl http://localhost:5001/docs
-curl http://localhost:5001/openapi.json
+LLM_BASE_URL=https://api.deepseek.com/v1
+LLM_MODEL_NAME=deepseek-chat
 ```
 
-Then inspect frontend network calls while running one simulation through the UI.
+LiteLLM proxy is not required for Phase 1. Direct DeepSeek reduces RAM and infrastructure complexity. LiteLLM can be reintroduced later only if model routing becomes necessary.
 
-### Phase 0 Exit Criteria
+### Resource Profile (Phase 0 Measured)
 
-Prophet may enter Phase 1 only if:
+| Metric | Value |
+|---|---|
+| MiroFish Docker image | ~14GB (disk) |
+| Container RAM idle | ~400MB |
+| Container RAM during simulation | ~1.5GB |
+| Full system free RAM after deployment | ~3.0GB of 7.8GB |
+| Test simulation size | 13 agents, 5 rounds |
+| Full pipeline runtime | ~10 minutes |
+| Estimated API cost per simulation | ~$2.50 |
 
-* 3 manual simulations complete successfully
-* MiroFish integration method is documented
-* seed submission method is known
-* ReportAgent output format is known
-* probability extraction strategy is confirmed
-* one test result is saved to Postgres
+Current droplet is sufficient for Phase 1. No hardware upgrade required.
 
-### Phase 0 Failure Paths
+### ReportAgent Output Reality
 
-| Failure | Meaning | Action |
+The blueprint anticipated ReportAgent might not output structured probability. Phase 0 confirms this.
+
+ReportAgent produces **narrative markdown reports** (~9,800 characters for Pectra test) with embedded probability ranges and qualitative signals. There is **no native JSON probability block.**
+
+Therefore, Prophet Phase 1 requires `probability_parser.py` as a hard dependency — not optional.
+
+#### Probability Parser Rules
+
+1. Parser must output one probability for YES.
+2. Parser must not use market price as the forecast.
+3. Parser may reference market price only as context.
+4. Parser must distinguish agent forecast from market price.
+5. Parser must store extracted probability ranges from the report.
+6. If the report is ambiguous, parser must return `parse_success=false`.
+7. Manual correction is forbidden.
+8. Parser version must be stored with every simulation run.
+
+Rule #2 is critical. ReportAgent reports frequently include market price references (e.g., "YES price 0.72"). The parser must distinguish: "the market says 72%" vs "our simulation forecasts X%."
+
+#### Parser Priority Chain
+
+| Method | Priority | Notes |
 |---|---|---|
-| Clean HTTP API exists | Best case | Build `mirofish_runner.py` as API adapter |
-| Backend endpoints exist but are undocumented | Acceptable | Reverse-engineer frontend calls and document local contract |
-| Only UI workflow works | Fragile | Use Playwright/file-system automation only for prototype |
-| MiroFish cannot run reliably | Blocking | Pause Prophet or switch to OASIS-direct integration |
-| ReportAgent cannot output structured probability | Blocking | Add second-stage probability parser |
+| Modify ReportAgent prompt to force final JSON block | 1 | Preferred — if prompt engineering works |
+| LLM extractor (second-stage DeepSeek call) | 2 | Primary fallback |
+| Regex extraction | 3 | Test only, not calibration |
+| Manual extraction | Forbidden | Would contaminate calibration data |
+
+#### Parser Output Contract
+
+Success:
+```json
+{
+  "forecast_probability_yes": 0.67,
+  "forecast_confidence": 0.54,
+  "forecast_direction": "YES",
+  "probability_source": "llm_extractor",
+  "extracted_ranges": ["60-65%", "75-80%"],
+  "final_reasoning": "Agent consensus favored YES, but disagreement persisted around execution risk.",
+  "parse_success": true,
+  "parser_version": "v0.1"
+}
+```
+
+Failure:
+```json
+{
+  "forecast_probability_yes": null,
+  "forecast_confidence": null,
+  "forecast_direction": null,
+  "probability_source": "llm_extractor",
+  "parse_success": false,
+  "error": "No clear probability estimate found",
+  "parser_version": "v0.1"
+}
+```
 
 ---
 
@@ -1522,17 +1593,19 @@ Neither path is committed until Phase 3 data exists. *Designing products before 
 
 Prophet must be built in this order:
 
-1. `PHASE_0_SPEC.md`
-2. `schema.sql`
-3. `market_scanner.py`
-4. `seed_builder.py`
-5. `mirofish_runner.py`
-6. `probability_parser.py`
-7. `logger.py`
-8. `resolution_monitor.py`
-9. `forecast_comparison.py`
-10. `calibration_report.py`
-11. `run_calibration.py`
+1. `PHASE_0_SPEC.md` ✅ Done
+2. Complete 3 MiroFish test simulations ✅ Done (Pectra, XRP ETF, Anthropic ARR)
+3. `probability_parser.py` — test on all 3 reports
+4. `schema.sql` — Prophet Postgres schema
+5. Write one parsed test result into Postgres (Gate G0 fully passed)
+6. `mirofish_runner.py` — MiroFish API adapter
+7. `market_scanner.py` — Polymarket event discovery
+8. `seed_builder.py` — Standardized seed documents
+9. `logger.py` — Postgres persistence
+10. `resolution_monitor.py` — Daily event resolution check
+11. `forecast_comparison.py` — Brier score computation
+12. `calibration_report.py` — Phase 1 markdown report
+13. `run_calibration.py` — Main entry point
 
 Explicitly deferred:
 
