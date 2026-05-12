@@ -2,28 +2,51 @@
 
 ## A Simulation-Calibrated Prediction Market System
 
-**Author:** ClawBot + Akshar  
-**Date:** May 11, 2026  
-**Status:** Research Complete — Phase 1 Ready  
+> **Phase 1 is not step one of building Prophet. Phase 1 is the experiment that determines whether Prophet should exist at all. This entire document may be worthless. The experiment exists to find out.**
+
+**Author:** ClawBot + Akshar
+**Date:** May 11, 2026
+**Status:** Research Complete — Phase 1 Ready
 **Version:** 1.0
 
 ---
 
 ## Table of Contents
 
-1. [Executive Summary](#executive-summary)
-2. [The Three Domains](#the-three-domains)
-3. [The Gap](#the-gap)
-4. [Why No One Is Building This](#why-no-one-is-building-this)
-5. [Prophet Architecture](#prophet-architecture)
-6. [First Principles Design](#first-principles-design)
-7. [Phase 1: Calibration Study](#phase-1-calibration-study)
-8. [Phase 2: Paper Trading](#phase-2-paper-trading)
-9. [Phase 3: Live Trading](#phase-3-live-trading)
-10. [Phase 4: Productization](#phase-4-productization)
-11. [Technical Reference](#technical-reference)
-12. [Risk Register](#risk-register)
-13. [Appendix: Research Sources](#appendix-research-sources)
+1. [Core Assumption & Honest Framing](#core-assumption--honest-framing)
+2. [Executive Summary](#executive-summary)
+3. [The Three Domains](#the-three-domains)
+4. [The Gap](#the-gap)
+5. [Why No One Is Building This](#why-no-one-is-building-this)
+6. [Prophet Architecture](#prophet-architecture)
+7. [First Principles Design](#first-principles-design)
+8. [Phase 1: Calibration Study](#phase-1-calibration-study)
+9. [Phase 2: Paper Trading](#phase-2-paper-trading)
+10. [Phase 3: Live Trading](#phase-3-live-trading)
+11. [Phase 4: Productization](#phase-4-productization)
+12. [Technical Reference](#technical-reference)
+13. [Risk Register](#risk-register)
+14. [Appendix: Research Sources](#appendix-research-sources)
+
+---
+
+## Core Assumption & Honest Framing
+
+Prophet rests on one hypothesis:
+
+> *A swarm simulation that models how narratives form, spread, and converge through social dynamics can predict event outcomes more accurately than prediction market prices.*
+
+**This hypothesis is unvalidated.** MiroFish has zero published accuracy benchmarks on resolved real-world prediction events. The academic swarm intelligence studies that suggest promise use **human swarms**, not LLM agent swarms. LLM agents have known pathologies: they're trained on the same data, they don't have real money at stake, their "beliefs" are next-token distributions not probability estimates, and they're susceptible to prompt-induced consensus. A swarm of 500 LLM agents may simply be 500 copies of the same training data bias.
+
+**Prophet is not a product plan. It is a structured experiment to test whether this hypothesis holds.** Phase 1 costs ~$50 and 2-4 weeks. It answers a single falsifiable question: "Does simulation Brier score beat market Brier score across 20 events?"
+
+| Outcome | What It Means | What We Do |
+|---|---|---|
+| Sim beats market clearly (15+/20) | Hypothesis has legs | Proceed to Phase 2 |
+| Ambiguous (sim wins some, loses some, no clear pattern) | Might be noise — need framework to interpret (see § Interpreting Ambiguous Results) | Follow the framework |
+| Market beats sim clearly (sim loses 15+/20) | Hypothesis likely wrong for current config | Major iteration or abandon |
+
+If Phase 1 fails, the document beyond the Phase 1 section is irrelevant. If Phase 1 succeeds, we have the most important thing: **data, not arguments.**
 
 ---
 
@@ -43,7 +66,7 @@ If true, Prophet generates compounding alpha. If false, the experiment generates
 
 ### Domain 1: Prediction Markets (2026 State of Play)
 
-**Scale:** $20B+/month in global volume. Up from $73M (Polymarket, 2023). A legitimate financial primitive — the Federal Reserve cites Kalshi as a superior macro expectations benchmark.
+**Scale:** $20B+/month in global volume. Up from $73M (Polymarket, 2023). A legitimate financial primitive - the Federal Reserve cites Kalshi as a superior macro expectations benchmark.
 
 **The Duopoly:**
 
@@ -89,7 +112,7 @@ GET /prices-history?market={id}&interval=1d  # Historical prices
 
 The CFTC has shifted from restrictive to permissive:
 - **Feb 6, 2026:** Withdrew 2024 proposed rules that would have banned "gaming" contracts
-- **Mar 11-12, 2026:** Opened ANPRM for public comment — signaling "responsible innovation"
+- **Mar 11-12, 2026:** Opened ANPRM for public comment - signaling "responsible innovation"
 - **Mar 31, 2026:** Enforcement priorities focused on insider trading, not market bans
 - Chairman Selig frames it as innovation with safeguards under exclusive CFTC authority
 
@@ -103,12 +126,12 @@ This is the friendliest regulatory window prediction markets have ever had.
 | **Liquidity-Driven Distortion** | Large "whale" trades swing prices beyond informational value | Simulation provides independent probability that ignores whale noise |
 | **Herd Behavior** | Information cascades where traders follow others rather than fundamentals | Agent swarm explicitly models herding dynamics as they form |
 | **Poor Calibration on Niche Events** | Brier scores falter in low-volume/ambiguous markets | Simulation generates independent analysis where crowd is thin |
-| **Narrative Blind Spots** | Markets price events but don't model second-order narrative effects | This is Prophet's core edge — modeling what the crowd hasn't processed yet |
+| **Narrative Blind Spots** | Markets price events but don't model second-order narrative effects | This is Prophet's core edge - modeling what the crowd hasn't processed yet |
 | **Retail Dominance** | 90% of sports volume is retail gambling, embedding systematic biases | Simulation models institutional-quality analysis, not retail emotion |
 
 ---
 
-### Domain 2: MiroFish — Swarm Intelligence Simulation
+### Domain 2: MiroFish - Swarm Intelligence Simulation
 
 **What it is:** An open-source engine that spawns thousands of LLM-powered AI agents (up to 1 million) with unique personalities, memories, and behavioral logic. Agents interact in simulated Twitter and Reddit environments. Emergent social dynamics produce structured prediction reports.
 
@@ -120,7 +143,7 @@ This is the friendliest regulatory window prediction markets have ever had.
 Step 1: Ontology Generation
     Raw reports/notes/fiction → structured entities, motives, factual anchors
 
-Step 2: Graph Construction  
+Step 2: Graph Construction
     Neo4j-powered knowledge graph exposing actors, tensions, memory structure
 
 Step 3: Parallel Simulation
@@ -173,7 +196,7 @@ Step 5: Deep Interaction
 - **Finance Case:** How management, analysts, and retail narratives react to the same financial signal
 - **Narrative Continuation:** How fictional worlds evolve after new events
 
-**LLM Integration:** Supports any OpenAI SDK-format API. Defaults to Alibaba Qwen-Plus. Compatible with DeepSeek Flash/Pro via LiteLLM. This makes simulation costs manageable — Flash is approximately 12x cheaper than Pro.
+**LLM Integration:** Supports any OpenAI SDK-format API. Defaults to Alibaba Qwen-Plus. Compatible with DeepSeek Flash/Pro via LiteLLM. This makes simulation costs manageable - Flash is approximately 12x cheaper than Pro.
 
 ---
 
@@ -188,15 +211,15 @@ Step 5: Deep Interaction
 **DeFAI Ecosystem:**
 - Virtuals Protocol & Bittensor democratizing agent deployment
 - Users can deploy financial bots in minutes
-- Investors can buy "agent shares" — own pieces of AI revenue streams
+- Investors can buy "agent shares" - own pieces of AI revenue streams
 - Specialist bots outpacing generalists in specific niches
 
 **Agent Identity & Payments:**
-- KYA (Know Your Agent) replacing KYC — cryptographic signatures establish trustworthy AI identities
+- KYA (Know Your Agent) replacing KYC - cryptographic signatures establish trustworthy AI identities
 - x402 standard enabling high-frequency microtransactions between agents
 - Projected 30% of Base daily transactions and 5% of Solana non-vote transactions in 2026
 
-**Emerging Risk — Algorithmic Resonance:**
+**Emerging Risk - Algorithmic Resonance:**
 - Most top-tier agents trained on identical datasets (Binance, Etherscan, Bloomberg)
 - Feedback loops where thousands of agents execute simultaneous sell orders
 - A new systemic risk category created by agent homogeneity
@@ -221,7 +244,7 @@ Real Markets        │   MiroFish / OASIS    │   Academic ABM
                     │                       │   Statistical Models
 ```
 
-### What Each Approach Does — and Doesn't Do
+### What Each Approach Does - and Doesn't Do
 
 **Approach 1: Pure Statistical Forecasting**
 - FutureSearch, Good Judgment Project, Metaculus, Manifold
@@ -239,7 +262,7 @@ Real Markets        │   MiroFish / OASIS    │   Academic ABM
 - PolyStrat, BulkQuant, 3Commas, custom Polymarket scripts
 - `Market Data → Signal Generation → Position Sizing → Trade Execution`
 - **Does:** React to price movements, volume changes, order book imbalances. Process 100x more data than humans.
-- **Doesn't:** Model narratives. No understanding of WHY prices move. Can't simulate counterfactuals. Purely reactive — responds to what IS, not what WILL BE.
+- **Doesn't:** Model narratives. No understanding of WHY prices move. Can't simulate counterfactuals. Purely reactive - responds to what IS, not what WILL BE.
 
 **Approach 4: DeFAI / Autonomous Agents**
 - Virtuals Protocol, Bittensor, ElizaOS, OpenClaw-based agents
@@ -279,15 +302,15 @@ Very few individuals have even 3 of these. Almost no teams have all 5. The commu
 
 ### 2. The Incentive Structures Push Away From Integration
 
-**MiroFish / Shanda Group:** Their incentive is platform adoption — more users uploading docs, more simulations run. Building a proprietary trading system doesn't grow their user base. It would be a conflict (using their engine to extract value from markets, rather than selling the engine).
+**MiroFish / Shanda Group:** Their incentive is platform adoption - more users uploading docs, more simulations run. Building a proprietary trading system doesn't grow their user base. It would be a conflict (using their engine to extract value from markets, rather than selling the engine).
 
 **CAMEL-AI / OASIS:** Academic consortium. Incentives: citations, papers, community contributions. A trading system is outside their scope and doesn't advance their research agenda. No academic reward for building a prediction market bot.
 
-**Polymarket / Kalshi:** Their incentive is volume and liquidity. They want MORE traders, not smarter ones. A tool that helps specific traders systematically beat the market potentially triggers adverse selection — retail realizes they're the dumb money and leaves. Platforms have a structural incentive to keep the playing field level enough that retail participation doesn't collapse.
+**Polymarket / Kalshi:** Their incentive is volume and liquidity. They want MORE traders, not smarter ones. A tool that helps specific traders systematically beat the market potentially triggers adverse selection - retail realizes they're the dumb money and leaves. Platforms have a structural incentive to keep the playing field level enough that retail participation doesn't collapse.
 
-**Quant funds / professional traders:** If they build anything like this, they keep it proprietary. The few people capable of building this have the strongest incentive to hide it. The absence of public evidence isn't evidence of absence — it's evidence of secrecy.
+**Quant funds / professional traders:** If they build anything like this, they keep it proprietary. The few people capable of building this have the strongest incentive to hide it. The absence of public evidence isn't evidence of absence - it's evidence of secrecy.
 
-**Open-source AI community:** Building this requires domain knowledge in binary options pricing, order book mechanics, USDC settlement, CFTC regulation, and event contract resolution — none of which are in the typical open-source AI dev's toolkit. And the payoff is niche alpha, not GitHub stars or academic citations or conference talks. Way more grinding for way less prestige.
+**Open-source AI community:** Building this requires domain knowledge in binary options pricing, order book mechanics, USDC settlement, CFTC regulation, and event contract resolution - none of which are in the typical open-source AI dev's toolkit. And the payoff is niche alpha, not GitHub stars or academic citations or conference talks. Way more grinding for way less prestige.
 
 **Retail / indie builders:** The people who DO build prediction market bots are crypto-native degens optimizing for speed and arbitrage. Their mental model is "read prices, find edge, trade." The conceptual leap to "simulate social dynamics, compare to prices, THEN trade" is a paradigm shift most traders never make. Conversely, the people who understand simulation (AI researchers) typically don't trade prediction markets at all.
 
@@ -295,8 +318,8 @@ Very few individuals have even 3 of these. Almost no teams have all 5. The commu
 
 | What Needs to Happen | Time Required | Who Can't Afford This |
 |---|---|---|
-| Build simulation pipeline | 2-4 weeks | — (anyone can) |
-| Run simulations on real events | Ongoing | — |
+| Build simulation pipeline | 2-4 weeks | - (anyone can) |
+| Run simulations on real events | Ongoing | - |
 | **Wait for events to resolve** | **Days to months** | Startups (18-month VC cycles), academics (conference deadlines) |
 | Compare simulation vs reality | Ongoing accumulation | Anyone needing a paper/demo/raise in <6 months |
 | Tune parameters from calibration data | Months to years | Anyone optimizing for quarterly results |
@@ -306,7 +329,7 @@ The payoff curve is back-loaded. Year 1: generating calibration data, eating los
 
 ### 4. The "MiroFish is Brand New" Factor
 
-MiroFish's GitHub was created in April 2026 — barely a month old. The community is still figuring out basic reliability, debating deployment tradeoffs, sharing prompt recipes. Financial use cases are experimental GitHub issues, not production systems. The window is open *right now*. In 6-12 months, someone will have productionized this — either a startup, a hedge fund, or a well-funded solo builder.
+MiroFish's GitHub was created in April 2026 - barely a month old. The community is still figuring out basic reliability, debating deployment tradeoffs, sharing prompt recipes. Financial use cases are experimental GitHub issues, not production systems. The window is open *right now*. In 6-12 months, someone will have productionized this - either a startup, a hedge fund, or a well-funded solo builder.
 
 ### 5. The Cold Start Bootstrap Problem
 
@@ -317,11 +340,11 @@ To run meaningful simulations → you need a tuned simulation pipeline
 To tune the pipeline → you need calibration data
 ```
 
-Someone must bootstrap this cold. That means running early simulations knowing they'll be inaccurate, eating API costs with no immediate return, recording everything systematically even when the signal looks noisy, and trusting the learning curve exists before you can see it. Most builders hit this loop, see early noise, conclude "it doesn't work," and leave. They never discover whether the noise was the bootstrapping phase or the steady state. The difference between "it doesn't work" and "it doesn't work YET" is months of systematic logging — and almost nobody bridges that gap.
+Someone must bootstrap this cold. That means running early simulations knowing they'll be inaccurate, eating API costs with no immediate return, recording everything systematically even when the signal looks noisy, and trusting the learning curve exists before you can see it. Most builders hit this loop, see early noise, conclude "it doesn't work," and leave. They never discover whether the noise was the bootstrapping phase or the steady state. The difference between "it doesn't work" and "it doesn't work YET" is months of systematic logging - and almost nobody bridges that gap.
 
 ### 6. The Gambling Stigma
 
-Despite being cited by the Federal Reserve, regulated by the CFTC, backed by ICE at $9B, and doing $20B+/month in volume — prediction markets carry a gambling stigma. Serious AI/ML engineers associate them with crypto degens and political betting, not legitimate information aggregation. The people with the technical skills to build this are often the most reputation-conscious. This creates a talent vacuum at the exact intersection where the most interesting work is possible.
+Despite being cited by the Federal Reserve, regulated by the CFTC, backed by ICE at $9B, and doing $20B+/month in volume - prediction markets carry a gambling stigma. Serious AI/ML engineers associate them with crypto degens and political betting, not legitimate information aggregation. The people with the technical skills to build this are often the most reputation-conscious. This creates a talent vacuum at the exact intersection where the most interesting work is possible.
 
 ### Summary: The Structural Void
 
@@ -445,21 +468,30 @@ These barriers compound, not add. The set of people who can overcome ALL of them
 ```
 raw_delta = sim_probability - market_probability
 
-conviction = raw_delta × sim_confidence × liquidity_factor × calibration_factor
+# Phase 1-2: sim_confidence is EXCLUDED from the formula.
+# It gets its own tracking column but does not affect decisions.
+# It is a logged curiosity, not a signal — until Phase 1 data validates it.
+conviction = raw_delta × liquidity_factor × calibration_factor
 
 WHERE:
-  sim_confidence: ReportAgent's self-assessed confidence (0-1)
   liquidity_factor: min(1.0, market_volume / min_volume_threshold)
   calibration_factor: historical_brier_ratio for this event_type
     (calibration_factor > 1.0 if sim historically beats market on this type)
+
+  # Phase 3+: sim_confidence is added as a multiplier ONLY IF
+  # Phase 1 data shows Pearson correlation between
+  # sim_confidence and sim_accuracy > 0.3.
+  # LLM self-reported confidence is systematically miscalibrated.
+  # Agent convergence may reflect prompt homogenization, not genuine consensus.
+  # Until proven otherwise, it is noise.
 ```
 
 **Thresholds (initial, to be calibrated in Phase 2):**
 
 | Conviction | Action |
 |---|---|
-| < 0.05 | No action — signal too weak |
-| 0.05 - 0.10 | Log as "observation" — track for calibration |
+| < 0.05 | No action - signal too weak |
+| 0.05 - 0.10 | Log as "observation" - track for calibration |
 | 0.10 - 0.15 | Consider paper trade |
 | > 0.15 | Trade signal (paper or live, depending on phase) |
 
@@ -476,7 +508,7 @@ kelly_fraction = edge - ((1 - edge) / odds)
 position_size = bankroll × (kelly_fraction × risk_multiplier)
 
 WHERE:
-  risk_multiplier: 0.25 (quarter-Kelly — conservative)
+  risk_multiplier: 0.25 (quarter-Kelly - conservative)
   max_position: 5% of bankroll (hard cap)
   min_position: 0.1% of bankroll (noise floor)
 ```
@@ -529,8 +561,8 @@ simulation_id
 │
 ├── sim_was_correct: True
 ├── market_was_correct: True
-├── sim_brier_score: 0.0784   # (0.72 - 1.0)² = 0.0784
-├── market_brier_score: 0.1764 # (0.58 - 1.0)² = 0.1764
+├── sim_brier_score: 0.0784   # (0.72 - 1.0)2 = 0.0784
+├── market_brier_score: 0.1764 # (0.58 - 1.0)2 = 0.1764
 ├── sim_better_than_market: True
 └── delta_direction_correct: True  # sim said higher probability than market, and YES happened
 ```
@@ -552,7 +584,7 @@ simulation_id
 
 ### Layer 6: Dashboard
 
-**Purpose:** Visualize the entire system state — simulations, markets, positions, and calibration metrics.
+**Purpose:** Visualize the entire system state - simulations, markets, positions, and calibration metrics.
 
 **Views:**
 
@@ -606,7 +638,7 @@ Polymarket requires no KYC, no geographic restriction (for non-US), public APIs 
 
 **7. Favor Asynchronous Over Real-Time**
 
-MiroFish simulations take minutes to hours, not milliseconds. This is correct — the edge is narrative depth, not speed. Events resolve in days to weeks. Batch simulations overnight. Compare to market prices the next morning.
+MiroFish simulations take minutes to hours, not milliseconds. This is correct - the edge is narrative depth, not speed. Events resolve in days to weeks. Batch simulations overnight. Compare to market prices the next morning.
 
 ### What We Measure (and What We Ignore)
 
@@ -636,8 +668,8 @@ MiroFish simulations take minutes to hours, not milliseconds. This is correct �
 
 ## Phase 1: Calibration Study
 
-**Duration:** 2-4 weeks  
-**Capital at Risk:** $0 (observation only)  
+**Duration:** 2-4 weeks
+**Capital at Risk:** $0 (observation only)
 **Goal:** Answer "Does MiroFish simulation beat Polymarket crowd prices?"
 
 ### Step 1.1: Deploy MiroFish
@@ -684,24 +716,24 @@ docker compose up -d
 
 **Key Scripts:**
 
-`market_scanner.py` — Discovers active Polymarket events suitable for simulation:
+`market_scanner.py` - Discovers active Polymarket events suitable for simulation:
 - Filter: active=true, volume > $50K, binary outcomes
 - Exclude: sports (retail-dominated, different dynamics), events <7 days to resolution, events at >95% probability
 - Return: event_id, title, outcomes, current prices, volume, category, resolution date
 
-`seed_builder.py` — Constructs seed documents from news sources:
+`seed_builder.py` - Constructs seed documents from news sources:
 - For each target event, search SearXNG for related news articles
 - Extract key facts, stakeholder positions, timeline, disputed claims
 - Assemble into structured seed document (markdown)
 - Include: event context, key actors, current state, what's at stake, uncertainty factors
 
-`mirofish_runner.py` — Launches simulations and parses output:
+`mirofish_runner.py` - Launches simulations and parses output:
 - POST seed document to MiroFish backend API
 - Wait for simulation completion (poll or webhook)
 - Parse ReportAgent output to extract probability, confidence, narrative summary
 - Store full simulation log for audit
 
-`logger.py` — Persists everything to Postgres:
+`logger.py` - Persists everything to Postgres:
 - Simulation runs (input, output, timing, cost)
 - Market snapshots (prices at simulation time)
 - Resolution tracking (outcome, timing, disputes)
@@ -716,13 +748,13 @@ CREATE TABLE prophet.simulations (
     market_title TEXT NOT NULL,
     market_url TEXT,
     category VARCHAR(100),                     -- politics, crypto, macro, etc.
-    
+
     -- Market state at simulation time
     polymarket_price_yes DECIMAL(5,4),         -- e.g., 0.5800
     polymarket_volume_usd DECIMAL(15,2),
     polymarket_liquidity_usd DECIMAL(15,2),
     market_snapshot_at TIMESTAMPTZ,
-    
+
     -- Simulation outputs
     mirofish_probability DECIMAL(5,4),         -- e.g., 0.7200
     mirofish_confidence DECIMAL(5,4),          -- 0-1 self-assessed confidence
@@ -730,12 +762,12 @@ CREATE TABLE prophet.simulations (
     simulation_params JSONB,                   -- agents, rounds, model, prompt_recipe
     simulation_duration_sec INTEGER,
     simulation_cost_estimate DECIMAL(8,4),
-    
+
     -- Derived
     raw_delta DECIMAL(5,4),                    -- sim - market
     event_type VARCHAR(50),
     seed_doc_hash VARCHAR(64),
-    
+
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -743,21 +775,21 @@ CREATE TABLE prophet.simulations (
 CREATE TABLE prophet.resolutions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     simulation_id UUID REFERENCES prophet.simulations(id),
-    
+
     -- Actual outcome
     actual_outcome BOOLEAN,                    -- TRUE = YES resolved, FALSE = NO
     resolution_time TIMESTAMPTZ,
     resolution_source TEXT,                    -- polymarket, manual, etc.
     disputed BOOLEAN DEFAULT FALSE,
-    
+
     -- Accuracy metrics
     sim_was_correct BOOLEAN,                   -- sim_prob > 0.5 matched outcome?
     market_was_correct BOOLEAN,                -- market > 0.5 matched outcome?
-    sim_brier_score DECIMAL(8,6),              -- (prob - outcome)²
+    sim_brier_score DECIMAL(8,6),              -- (prob - outcome)2
     market_brier_score DECIMAL(8,6),
     sim_better_than_market BOOLEAN,
     delta_direction_correct BOOLEAN,           -- sim pointed in right direction vs market
-    
+
     resolved_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -822,12 +854,28 @@ At 20 resolved events, compute:
 
 **Decision:** If metrics pass → Phase 2. If not → analyze failure patterns, iterate on simulation parameters, run next 20 events.
 
+**Disclosure:** Phase 1-2 results are not published, shared, or discussed publicly until G3 is passed. A positive Phase 1 result that becomes public before you've built a trading position is a result you've given away.
+
+### Interpreting Ambiguous Phase 1 Results
+
+Ambiguous results (sim beats market ~50-65% of events, no clear signal) are the most dangerous outcome. Without a pre-specified interpretation framework, a motivated builder will always find a narrative to explain away failures and proceed anyway.
+
+| Pattern | Interpretation | Action |
+|---|---|---|
+| Sim better on politics/macro, worse on crypto/sports | Event type signal — sim may work on narrative-rich events only | Run 20 more events on qualifying types only, exclude underperformers |
+| Sim randomly better/worse, no category pattern | Likely noise — hypothesis weak at this config | Halt. Redesign simulation parameters (agent count, rounds, seed construction) before running more events |
+| Sim consistently wrong (worse than market 15+/20) | Hypothesis falsified for current configuration | Major iteration on simulation design, or document negative finding and reconsider approach |
+| Sim better 15+/20 across diverse event types | Strong signal | Gate G2 passed |
+| Sim probability always closer to 50% than market (regression to mean) | Sim may be producing "safe" middle probabilities, not real forecasts | Check if sim probabilities cluster near 50% — if so, sim is hedging, not predicting. Redesign ReportAgent prompt |
+
+**The rule:** if you can't articulate the pattern in the data without using words like "promising," "interesting," or "potential," you're rationalizing. Re-run with stricter criteria.
+
 ---
 
 ## Phase 2: Paper Trading
 
-**Duration:** 2-4 weeks  
-**Capital at Risk:** $0 (simulated trading only)  
+**Duration:** 2-4 weeks
+**Capital at Risk:** $0 (simulated trading only)
 **Goal:** "If we had traded on divergence signals, what would the returns be?"
 
 ### Step 2.1: Divergence Calculator
@@ -880,8 +928,8 @@ Use paper trading data to tune:
 
 ## Phase 3: Live Trading
 
-**Duration:** Ongoing  
-**Capital at Risk:** Small (initial: $500-$1000 USDC)  
+**Duration:** Ongoing
+**Capital at Risk:** Small (initial: $500-$1000 USDC)
 **Goal:** Validate that paper performance translates to live execution.
 
 ### Step 3.1: Polymarket CLOB Integration
@@ -941,24 +989,7 @@ Scale capital only when:
 
 ## Phase 4: Productization
 
-**Trigger:** 6+ months of live trading with positive expectancy.
-
-### Potential Products
-
-| Product | Description | Target User |
-|---|---|---|
-| **Prophet Signals API** | REST/WebSocket API serving simulation-calibrated probability estimates | Quant funds, professional traders |
-| **Prophet Dashboard** | Self-serve platform to run simulations on any Polymarket event | Retail analysts, researchers |
-| **Prophet Fund** | Autonomous prediction fund — MiroFish simulations → automated trading | Passive capital allocators |
-| **Prophet Research** | Publish calibration study results, advance "simulation finance" as a field | Academic/industry |
-
-### Infrastructure Scaling
-
-- MiroFish simulation scheduling and queuing (RQ worker integration)
-- Parallel simulation execution (multiple events simultaneously)
-- Automated seed document generation (news monitoring → automatic simulation triggers)
-- Cross-platform execution (add Kalshi, other prediction markets)
-- Simulation parameter optimization (genetic algorithms over agent configs)
+**Trigger:** Phase 3 Sharpe > 1.0 over 100+ live trades with positive expectancy. Options at that point include a simulation-calibrated signals API, a self-serve dashboard for prediction market analysts, or a scaled autonomous fund. Decision deferred until Phase 3 data exists. Designing products before you have edge data is writing a pitch deck for a company that may not exist.
 
 ---
 
@@ -995,7 +1026,7 @@ Scale capital only when:
 | SearXNG | localhost:8088 | Multi-engine news search |
 | FastAPI | localhost:8000 | Pipeline orchestration (extend existing API) |
 | RQ Worker | Docker | Background simulation execution |
-| Docker Compose | — | Container orchestration |
+| Docker Compose | - | Container orchestration |
 
 ### Cost Model
 
@@ -1016,7 +1047,7 @@ Scale capital only when:
 
 | # | Risk | Probability | Impact | Mitigation | Contingency |
 |---|---|---|---|---|---|
-| R1 | MiroFish deployment fails on existing infra | Medium | High (blocks Phase 1) | Test with minimal config first; use offline variant if needed | Use OASIS directly without MiroFish frontend |
+| R1 | MiroFish deployment fails on existing infra | High | High (blocks Phase 1) | Test with minimal config first; use offline variant if needed. Plan for 1-2 days of debugging per simulation type in week 1. | Use OASIS directly as fallback — note OASIS integration is a materially different engineering effort, not a quick swap |
 | R2 | Simulations are too expensive at scale | Low | Medium | Flash for agents, Pro only for synthesis; batch overnight | Reduce agent count, rounds |
 | R3 | Simulation accuracy doesn't beat market | Medium | High (invalidates core hypothesis) | Track per-event-type accuracy; identify where sim works best | Narrow scope to specific event types, or publish negative result as valuable finding |
 | R4 | Polymarket API changes or rate limits tighten | Low | Medium | Use WebSocket where possible; join Builder Program for elevated limits | Switch focus to Kalshi API |
@@ -1024,7 +1055,7 @@ Scale capital only when:
 | R6 | Live trading losses exceed risk limits | Medium | Medium | Strict position sizing, circuit breakers, daily loss limits | Halt trading, review all signals |
 | R7 | Event resolution disputes or ambiguity | Medium | Low | Only trade events with clear, unambiguous resolution criteria | Exclude disputed events from calibration |
 | R8 | Agent homogenization degrades simulation quality | Low | Medium | OASIS has built-in diversity mechanisms; monitor agent behavior diversity | Increase agent persona variance, add noise to LLM temperature |
-| R9 | Market moves against position before resolution | High | Low | This is expected — binary options are volatile. Hold to resolution unless stop-loss triggered. | Accept volatility as normal; sizing limits contain damage |
+| R9 | Market moves against position before resolution | High | Low | This is expected - binary options are volatile. Hold to resolution unless stop-loss triggered. | Accept volatility as normal; sizing limits contain damage |
 | R10 | Smart contract risk (Polymarket) | Very Low | High | Use only spot USDC, no leverage; keep funds on platform only when actively trading | Withdraw to wallet between trades |
 
 ---
@@ -1034,12 +1065,12 @@ Scale capital only when:
 ### Prediction Markets
 - MEXC Learn: "Best Prediction Market Platforms 2026"
 - QuantVPS: "Prediction Markets Volume Compared"
-- CryptoTimes: "Polymarket vs Kalshi vs Augur — Which Wins in 2026"
+- CryptoTimes: "Polymarket vs Kalshi vs Augur - Which Wins in 2026"
 - PredictStreet: "The Great Prediction War of 2026"
 - TS Imagine: "Global Regulation of Prediction Event Markets"
 - MetaMask: "Prediction Market Overview & Trends 2026"
 - TRM Labs: "How Prediction Markets Scaled to $21B Monthly Volume in 2026"
-- Stanford Law: "Prediction Markets Are Surging — Here's What You Need to Know"
+- Stanford Law: "Prediction Markets Are Surging - Here's What You Need to Know"
 - CFTC Press Releases: 9194-26, 9193-26
 - Federal Register: "Prediction Markets" (March 16, 2026)
 - Greenberg Traurig: "CFTC Regulatory Developments on Prediction Markets" (March 2026)
@@ -1049,22 +1080,22 @@ Scale capital only when:
 ### MiroFish & OASIS
 - MiroFish Official Site: mirofish.my
 - MiroFish GitHub: github.com/666ghj/MiroFish
-- MiroFish Offline: github.com/nikmcfly/MiroFish-Offline  
+- MiroFish Offline: github.com/nikmcfly/MiroFish-Offline
 - CAMEL-AI OASIS: github.com/camel-ai/oasis
 - CAMEL-AI Framework: github.com/camel-ai/camel
-- FlowZap: "MiroFish — Build Your Own Synthetic Focus Group"
+- FlowZap: "MiroFish - Build Your Own Synthetic Focus Group"
 - Emelia.io: "MiroFish AI Swarm Prediction"
-- Blocmates: "What Is MiroFish — The Agent Engine That Can Predict Anything"
-- Dev.to: "MiroFish — The Open Source AI Engine That Builds Digital Worlds"
+- Blocmates: "What Is MiroFish - The Agent Engine That Can Predict Anything"
+- Dev.to: "MiroFish - The Open Source AI Engine That Builds Digital Worlds"
 
 ### AI Agents & DeFAI
-- KuCoin: "Will AI Agents Take Over DeFi — 2026-2030 Predictions"
-- Galaxy Research: "Predictions 2026 — Crypto, Bitcoin, DeFi"
+- KuCoin: "Will AI Agents Take Over DeFi - 2026-2030 Predictions"
+- Galaxy Research: "Predictions 2026 - Crypto, Bitcoin, DeFi"
 - WEEX: "5 Best AI Agents in 2026"
 - Crypto.news: "8 Leading AI Trading Bots for May 2026"
 
 ### Academic
-- Taylor & Francis (2026): "Manipulation in Prediction Markets — An Agent-Based Modeling Experiment"
+- Taylor & Francis (2026): "Manipulation in Prediction Markets - An Agent-Based Modeling Experiment"
 - University of Bristol: "Price Drivers in Prediction Markets"
 - Koa et al. (2024): LLM-powered agents in market simulation
 - Stanford/Simudyne: Agent-based modeling in capital markets
@@ -1082,7 +1113,7 @@ Scale capital only when:
 
 | Version | Date | Changes |
 |---|---|---|
-| 1.0 | May 11, 2026 | Initial blueprint — complete research synthesis, architecture, roadmap |
+| 1.0 | May 11, 2026 | Initial blueprint - complete research synthesis, architecture, roadmap |
 
 ---
 
