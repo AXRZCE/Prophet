@@ -6,8 +6,8 @@
 
 **Author:** ClawBot + Akshar
 **Date:** May 11, 2026
-**Status:** Research Complete — Phase 1 Ready
-**Version:** 1.0
+**Status:** Calibration Lab — Phase 1 Narrowed
+**Version:** 1.1
 
 ---
 
@@ -38,25 +38,31 @@ Prophet rests on one hypothesis:
 
 **This hypothesis is unvalidated.** MiroFish has zero published accuracy benchmarks on resolved real-world prediction events. The academic swarm intelligence studies that suggest promise use **human swarms**, not LLM agent swarms. LLM agents have known pathologies: they're trained on the same data, they don't have real money at stake, their "beliefs" are next-token distributions not probability estimates, and they're susceptible to prompt-induced consensus. A swarm of 500 LLM agents may simply be 500 copies of the same training data bias.
 
-**Prophet is not a product plan. It is a structured experiment to test whether this hypothesis holds.** Phase 1 costs ~$50 and 2-4 weeks. It answers a single falsifiable question: "Does simulation Brier score beat market Brier score across 20 events?"
+**Prophet is not a product plan. It is a structured experiment — a calibration lab — to test whether this hypothesis holds.** The lab has no trading PnL target, no product roadmap, and no founder narrative. It has one job: compare market probability, simulation probability, and actual outcome, repeatedly, until the data says something clear.
+
+Phase 1 costs ~$50 and 2-4 weeks. It answers a single falsifiable question: **"For a narrow category of narrative-rich events, does simulation Brier score beat market Brier score?"** — starting with 10 events in one category before expanding to 20, and only in one category (crypto/regulatory/company narrative events) rather than mixed domains.
 
 | Outcome | What It Means | What We Do |
 |---|---|---|
-| Sim beats market clearly (15+/20) | Hypothesis has legs | Proceed to Phase 2 |
-| Ambiguous (sim wins some, loses some, no clear pattern) | Might be noise — need framework to interpret (see § Interpreting Ambiguous Results) | Follow the framework |
-| Market beats sim clearly (sim loses 15+/20) | Hypothesis likely wrong for current config | Major iteration or abandon |
+| Sim beats market clearly (10+ events) | Hypothesis has legs in this category | Expand to 20, then Phase 2 |
+| Ambiguous (no clear signal) | Might be noise — check stability diagnostics (see § Simulation Stability Diagnostics) | Follow the framework |
+| Market beats sim clearly | Hypothesis likely wrong for current config | Major iteration or abandon |
 
 If Phase 1 fails, the document beyond the Phase 1 section is irrelevant. If Phase 1 succeeds, we have the most important thing: **data, not arguments.**
+
+**False-confidence detection is not optional.** LLM agents may produce persuasive reports with weak accuracy, cluster near 50%, or converge too fast to informative disagreement. Phase 1 explicitly tracks these failure modes separately from the core hypothesis test (see § Simulation Stability Diagnostics). A simulation that "sounds right" but systematically misfires is worse than one that predicts poorly — it builds false confidence that degrades every downstream decision.
 
 ---
 
 ## Executive Summary
 
-**Prophet** is a system that bridges two disconnected worlds: **swarm intelligence simulation** (MiroFish/OASIS — thousands of AI agents modeling narrative formation) and **prediction markets** (Polymarket/Kalshi — crowd beliefs aggregated into prices).
+**Prophet** is a calibration laboratory that sits between three domains: **swarm intelligence simulation** (MiroFish/OASIS — thousands of AI agents modeling narrative formation), **prediction markets** (Polymarket/Kalshi — crowd beliefs aggregated into prices), and **actual resolved outcomes** (the ground truth). Its job is not to trade. Its job is to measure whether simulation-based forecasts are better calibrated than market prices for narrative-rich events.
 
 The core bet: *A swarm simulation that models how narratives form, spread, and converge through social dynamics can predict event outcomes more accurately than prediction market prices — especially for narrative-rich, multi-stakeholder events where the crowd systematically underweights second-order effects.*
 
-If true, Prophet generates compounding alpha. If false, the experiment generates a unique dataset (simulation vs market vs reality) that no one else has.
+**Prophet is not a trading system. It is a calibration engine.** Trading is a downstream application — one that only becomes relevant if calibration survives Phase 1-3 with evidence. Decision intelligence for narrative-heavy events (product launches, policy shifts, protocol upgrades) is an equally viable end state and may arrive first.
+
+If the calibration hypothesis holds, Prophet generates compounding alpha across prediction markets, forecasting dashboards, and scenario analysis tools. If false, the experiment generates a unique dataset (simulation vs market vs reality across many event types) that no one else has.
 
 **No one is building this.** The skill stack (multi-agent simulation + prediction market mechanics + crypto infrastructure + production backend) doesn't exist in any single team, and the incentive structures of every relevant actor push away from this exact integration.
 
@@ -430,7 +436,7 @@ These barriers compound, not add. The set of people who can overcome ALL of them
 - Neo4j or Zep Cloud for agent memory
 - Simulation triggered via Python subprocess or REST API call
 
-**Cost Estimate:** $2-5 per full simulation (Flash for agents, Pro for report). For 20-event calibration study: $40-100 total API cost.
+**Cost Estimate:** $2-5 per full simulation (Flash for agents, Pro for report). For 10-event checkpoint: $20-50. For full 20-event calibration study: $40-100 total API cost.
 
 ### Layer 2: Market Lens (Polymarket + Kalshi APIs)
 
@@ -561,8 +567,8 @@ simulation_id
 │
 ├── sim_was_correct: True
 ├── market_was_correct: True
-├── sim_brier_score: 0.0784   # (0.72 - 1.0)2 = 0.0784
-├── market_brier_score: 0.1764 # (0.58 - 1.0)2 = 0.1764
+├── sim_brier_score: 0.0784   # (0.72 - 1.0)^2 = 0.0784
+├── market_brier_score: 0.1764 # (0.58 - 1.0)^2 = 0.1764
 ├── sim_better_than_market: True
 └── delta_direction_correct: True  # sim said higher probability than market, and YES happened
 ```
@@ -648,21 +654,24 @@ MiroFish simulations take minutes to hours, not milliseconds. This is correct - 
 - Calibration curves per event type
 - Cost per simulation
 - Time from seed to report
+- **Simulation stability** — see dedicated diagnostics (§ Simulation Stability Diagnostics)
 
 **Ignored (at least in Phase 1-2):**
 - PnL in dollar terms (irrelevant until Phase 3)
 - Sharpe ratio (meaningless with <50 trades)
 - "Gut feel" about simulation quality
 - Individual agent behavior analysis (fascinating but not decision-relevant)
+- sim_confidence (logged but excluded from decisions — see Layer 3 rationale)
 
 ### Decision Gates
 
 | Gate | Question | Criteria | Action if Pass | Action if Fail |
 |---|---|---|---|---|
 | **G1** | Can we run MiroFish on our infra? | Successful simulation with 100+ agents | Proceed to event selection | Debug deployment |
-| **G2** | Does simulation beat market on 20 events? | Sim Brier < Market Brier AND directional accuracy > 55% | Proceed to Phase 2 | Analyze failure patterns, iterate |
-| **G3** | Do paper trades show positive expectancy? | Sharpe > 0.5 on 50 paper trades | Proceed to Phase 3 | Tune conviction thresholds |
-| **G4** | Do live trades maintain paper performance? | 50 live trades with Sharpe > 0.5 | Scale capital, add Kalshi | Revert to paper, investigate slippage/latency |
+| **G2a** | Does sim show signal in one narrow category? | Sim Brier < Market Brier on 10 crypto/regulatory narrative events | Expand to 20 events | Analyze failure patterns, check stability diagnostics |
+| **G2b** | Does signal hold at scale? | Sim Brier < Market Brier on 20 single-category events AND directional accuracy > 55% | Proceed to Phase 2 | Abandon or re-scope to different category |
+| **G3** | Do paper trades show positive expectancy? | Sharpe > 0.5 on 50 paper trades ⚠️ 50 trades is too few for a statistically reliable Sharpe ratio (~±0.5 confidence interval). Treat as directional signal, not a validated metric. Proceed only if supporting metrics (win rate, profit factor) also point in the same direction. | Proceed to Phase 3 | Tune conviction thresholds |
+| **G4** | Do live trades maintain paper performance? | 50 live trades with Sharpe > 0.5 | Evaluate Phase 4 product direction(s) | Revert to paper, investigate slippage/latency |
 
 ---
 
@@ -723,6 +732,7 @@ docker compose up -d
 
 `seed_builder.py` - Constructs seed documents from news sources:
 - For each target event, search SearXNG for related news articles
+- If SearXNG returns <3 results, fall back to web_search (Perplexity) or manual web_fetch from known sources (e.g., Reuters, Politico, CoinDesk depending on category)
 - Extract key facts, stakeholder positions, timeline, disputed claims
 - Assemble into structured seed document (markdown)
 - Include: event context, key actors, current state, what's at stake, uncertainty factors
@@ -785,7 +795,7 @@ CREATE TABLE prophet.resolutions (
     -- Accuracy metrics
     sim_was_correct BOOLEAN,                   -- sim_prob > 0.5 matched outcome?
     market_was_correct BOOLEAN,                -- market > 0.5 matched outcome?
-    sim_brier_score DECIMAL(8,6),              -- (prob - outcome)2
+    sim_brier_score DECIMAL(8,6),              -- (prob - outcome)^2
     market_brier_score DECIMAL(8,6),
     sim_better_than_market BOOLEAN,
     delta_direction_correct BOOLEAN,           -- sim pointed in right direction vs market
@@ -814,22 +824,42 @@ CREATE INDEX idx_simulations_event_type ON prophet.simulations(event_type);
 CREATE INDEX idx_resolutions_sim_id ON prophet.resolutions(simulation_id);
 ```
 
-### Step 1.4: Select 20 Target Events
+### Step 1.4: Select Target Events — Narrow First, Expand Later
+
+**Principle:** Start with one category where narrative matters most and resolution is clearest. Mixed categories introduce noise that makes bad results uninterpretable.
+
+**Primary category: Crypto / company / regulatory narrative events.**
+
+Why this category:
+- Public discussion is visible and well-documented (Twitter, forums, news)
+- Narratives demonstrably move prices (protocol upgrades, ETF decisions, regulatory rulings)
+- Polymarket has deep liquidity in crypto verticals
+- Resolution criteria tend to be clear (binary: did the ETF approve? did the fork succeed?)
+- Our AI/infra expertise gives us an edge in constructing seed docs for this domain
+
+**Event count: 10 first, then 20 if signal is present.**
+
+A strong result on 10 narrow-category events is more informative than a muddy result on 20 mixed events. If sim beats market on 10 single-category events, we expand to 20 in the same category. If the pattern holds, the signal is category-specific and real. If not, the hypothesis fails faster with less sunk cost.
+
+**Excluded permanently until Phase 3:**
+- Sports (retail-dominated, different dynamics, crowded markets)
+- Pure macro prints (CPI, NFP — too efficient, low narrative component)
+- Elections (noisy, politically motivated liquidity, long resolution windows)
 
 **Selection Criteria:**
 - Active on Polymarket, binary (YES/NO) outcome
 - Volume > $50,000 (meaningful liquidity)
 - 7-60 days to resolution (time for narrative to evolve)
 - Current probability between 15% and 85% (information still being discovered)
-- Narrative-rich: politics, macro, policy, technology, crypto (not sports)
+- Narrative-rich by nature: the outcome depends on how stakeholders interpret events, not just mechanical triggers
 - Clear, unambiguous resolution criteria
 
-**Initial Candidate Categories (to be finalized against live Polymarket data):**
-- Political: election outcomes, legislative votes, confirmation odds
-- Macro: Fed rate decisions, CPI prints, GDP forecasts
-- Crypto: protocol upgrades, ETF approvals, token price thresholds
-- Technology: regulatory decisions, company milestones, product launches
-- Geopolitical: sanctions, agreements, conflict developments
+**Event Examples (illustrative, not final):**
+- Crypto: "Will Ethereum Pectra upgrade complete by X date?" "Will Solana file for a spot ETF before December 2026?"
+- Regulatory: "Will the SEC approve a spot XRP ETF in Q3 2026?" "Will the EU finalize MiCA stablecoin rules by July?"
+- Company: "Does the shareholder vote pass?" "Will the merger close by the deadline?"
+
+*Final event list determined against live Polymarket data at Phase 1 start.*
 
 ### Step 1.5: Run and Track
 
@@ -843,6 +873,8 @@ For each event:
 
 ### Step 1.6: Analyze Results
 
+**Checkpoint at 10 events:** Run all stability diagnostics first. If any stability metric is in the red zone, halt and fix before continuing (see § Simulation Stability Diagnostics). If stability passes, evaluate Brier score comparison. If sim beats market on 10 events, expand to 20. If not, reconsider category choice or abandon.
+
 At 20 resolved events, compute:
 
 | Metric | Threshold for Phase 2 |
@@ -850,11 +882,28 @@ At 20 resolved events, compute:
 | Sim Brier score < Market Brier score | Must be true |
 | Directional accuracy (sim vs market disagreements) | > 55% |
 | Sim accuracy (probability > 0.5 matched outcome) | > Market accuracy |
-| Event type breakdown | Identify which types sim excels at |
+| Stability diagnostics (5 failure modes) | All must pass (see § Simulation Stability Diagnostics) |
+|"Sim was hedging" check | IQR of sim probabilities > 0.20 |
 
-**Decision:** If metrics pass → Phase 2. If not → analyze failure patterns, iterate on simulation parameters, run next 20 events.
+**Decision:** If all metrics pass and stability diagnostics are green → Phase 2. If not → analyze failure patterns, iterate on simulation parameters, run next 20 events.
 
 **Disclosure:** Phase 1-2 results are not published, shared, or discussed publicly until G3 is passed. A positive Phase 1 result that becomes public before you've built a trading position is a result you've given away.
+
+*(Cross-reference: see Risk Register R11 — Premature disclosure of Phase 1-2 results.)*
+
+### Simulation Stability Diagnostics
+
+A simulation that beats the market on Brier score but is unstable under small perturbations is not a reliable signal. These failure modes are tracked independently from the core hypothesis test and flagged as disqualifying regardless of raw Brier scores.
+
+| Failure Mode | What It Looks Like | Minimum Bar to Proceed | Action if Failed |
+|---|---|---|---|
+| **Probability clustering near 50%** | Sim probabilities cluster in 0.40-0.60 range while market shows more extreme values | Sim's 20-event IQR > 0.20 | Redesign ReportAgent prompt to penalize hedging; add relative confidence framing |
+| **High variance across runs** | Two runs of the same simulation with the same seed produce materially different probabilities (>0.15 delta) | Same-seed variance < 0.07 Brier across 3 re-runs | Lock random seeds; increase agent count; homogenize prompt template |
+| **Fast convergence without informative disagreement** | Agents all agree in <3 rounds and produce unanimous reports | At least 3 rounds of measurable disagreement before final report | Increase agent persona diversity; add contrarian agent roles; lower temperature of holdouts |
+| **Persuasive reports, weak accuracy** | ReportAgent produces coherent narrative probability reports, but forecasts are systematically wrong — the simulation "sounds smart" but predicts poorly | Sim Brier must be meaningfully < market Brier (not just equal) across the full sample | Flag as critical; halt on any single event where report is compelling but forecast is inverted (p > 0.7 on outcome that resolves opposite) |
+| **Model sensitivity** | Different LLM backends (Flash vs Pro vs Kimi) produce significantly different probabilities for the same seed event | Cross-model correlation of sim probabilities > 0.80 | Standardize on one model for all Phase 1 runs; if model choice flips the direction, the signal is not from simulation mechanics |
+
+**Rule:** If any stability metric is in the red zone after the first 10 events, the Brier score comparison is unreliable and Phase 1 must be re-run with corrected parameters before any pass/fail judgment. False confidence is Prophet's biggest risk. These diagnostics exist to prevent it.
 
 ### Interpreting Ambiguous Phase 1 Results
 
@@ -865,7 +914,7 @@ Ambiguous results (sim beats market ~50-65% of events, no clear signal) are the 
 | Sim better on politics/macro, worse on crypto/sports | Event type signal — sim may work on narrative-rich events only | Run 20 more events on qualifying types only, exclude underperformers |
 | Sim randomly better/worse, no category pattern | Likely noise — hypothesis weak at this config | Halt. Redesign simulation parameters (agent count, rounds, seed construction) before running more events |
 | Sim consistently wrong (worse than market 15+/20) | Hypothesis falsified for current configuration | Major iteration on simulation design, or document negative finding and reconsider approach |
-| Sim better 15+/20 across diverse event types | Strong signal | Gate G2 passed |
+| Sim better 15+/20 in a single category | Strong signal for that category | Gate G2b passed — expand to broader categories |
 | Sim probability always closer to 50% than market (regression to mean) | Sim may be producing "safe" middle probabilities, not real forecasts | Check if sim probabilities cluster near 50% — if so, sim is hedging, not predicting. Redesign ReportAgent prompt |
 
 **The rule:** if you can't articulate the pattern in the data without using words like "promising," "interesting," or "potential," you're rationalizing. Re-run with stricter criteria.
@@ -909,7 +958,7 @@ paper_trades = {
 |---|---|
 | Win rate | > 55% |
 | Average return per trade | > 2% |
-| Sharpe ratio (annualized from paper trades) | > 0.5 |
+| Sharpe ratio (annualized from paper trades) | > 0.5 ⚠️ 50-sample Sharpe has wide confidence intervals (~±0.5 at 95% CI). Treat as directional signal only |
 | Max drawdown | < 15% |
 | Profit factor (gross wins / gross losses) | > 1.3 |
 | Conviction correlation | Higher conviction → higher win rate |
@@ -987,9 +1036,21 @@ Scale capital only when:
 
 ---
 
-## Phase 4: Productization
+## Phase 4: Productization (Deferred — For Reference Only)
 
-**Trigger:** Phase 3 Sharpe > 1.0 over 100+ live trades with positive expectancy. Options at that point include a simulation-calibrated signals API, a self-serve dashboard for prediction market analysts, or a scaled autonomous fund. Decision deferred until Phase 3 data exists. Designing products before you have edge data is writing a pitch deck for a company that may not exist.
+**Trigger:** Phase 3 Sharpe > 1.0 over 100+ live trades with positive expectancy.
+
+**Product directions (not mutually exclusive):**
+
+| Path | Description | Market |
+|---|---|---|
+| **Trading signals API** | Simulation-calibrated conviction scores as a subscription API for retail/quant prediction market traders | Narrow but proven if Phase 3 works — competing with FutureSearch, AgentBets |
+| **Decision intelligence dashboard** | Scenario-calibrated forecasting for narrative-heavy events (product launches, policy shifts, protocol upgrades, regulatory rulings) sold to enterprises, crypto foundations, political campaigns | Wider TAM, less dependent on live-trading edge — the first product Prophet could ship without validation from the full pipeline |
+| **Autonomous fund** | Scaled capital deployment across Polymarket, Kalshi, and emerging prediction market venues | Highest capital requirement, most regulatory complexity, but pure alpha exposure if the edge compounds |
+
+**Recommendation:** The decision-intelligence path is the most defensible first product. It leverages the same calibration data as the trading path but addresses a broader, less competitive market. The trading signals path is a natural second product once calibration data exists.
+
+**Decision deferred until Phase 3 data exists.** Designing products before you have calibration data is writing a pitch deck for a company that may not exist.
 
 ---
 
@@ -1039,6 +1100,8 @@ Scale capital only when:
 | Postgres/Redis/Qdrant | $0 (existing) | Already running |
 | Infrastructure | $0 marginal | Existing droplet capacity |
 | **Total per simulation** | **~$2.50** | |
+| **Per simulation** | **~$2.50** | |
+| **Phase 1 checkpoint (10 events)** | **~$25** | API costs only |
 | **Phase 1 total (20 events)** | **~$50** | API costs only |
 
 ---
@@ -1047,7 +1110,7 @@ Scale capital only when:
 
 | # | Risk | Probability | Impact | Mitigation | Contingency |
 |---|---|---|---|---|---|
-| R1 | MiroFish deployment fails on existing infra | High | High (blocks Phase 1) | Test with minimal config first; use offline variant if needed. Plan for 1-2 days of debugging per simulation type in week 1. | Use OASIS directly as fallback — note OASIS integration is a materially different engineering effort, not a quick swap |
+| R1 | MiroFish deployment fails on existing infra | High | Very High — blocks Phase 1; OASIS fallback is a materially different engineering effort, not a quick swap | Test with minimal config first; use offline variant if needed. Plan for 1-2 days of debugging per simulation type in week 1. | Use OASIS directly as fallback; budget 1-2 weeks for OASIS integration separately |
 | R2 | Simulations are too expensive at scale | Low | Medium | Flash for agents, Pro only for synthesis; batch overnight | Reduce agent count, rounds |
 | R3 | Simulation accuracy doesn't beat market | Medium | High (invalidates core hypothesis) | Track per-event-type accuracy; identify where sim works best | Narrow scope to specific event types, or publish negative result as valuable finding |
 | R4 | Polymarket API changes or rate limits tighten | Low | Medium | Use WebSocket where possible; join Builder Program for elevated limits | Switch focus to Kalshi API |
@@ -1057,6 +1120,7 @@ Scale capital only when:
 | R8 | Agent homogenization degrades simulation quality | Low | Medium | OASIS has built-in diversity mechanisms; monitor agent behavior diversity | Increase agent persona variance, add noise to LLM temperature |
 | R9 | Market moves against position before resolution | High | Low | This is expected - binary options are volatile. Hold to resolution unless stop-loss triggered. | Accept volatility as normal; sizing limits contain damage |
 | R10 | Smart contract risk (Polymarket) | Very Low | High | Use only spot USDC, no leverage; keep funds on platform only when actively trading | Withdraw to wallet between trades |
+| R11 | Premature disclosure of Phase 1-2 results before building a trading position | Low | Very High — gives away the signal before capturing any value | Results not published, shared, or discussed publicly until G3 is passed (enforced in Phase 1.6) | If accidentally disclosed, accelerate to Phase 3 live trading to capitalize before others follow |
 
 ---
 
@@ -1113,7 +1177,9 @@ Scale capital only when:
 
 | Version | Date | Changes |
 |---|---|---|
-| 1.0 | May 11, 2026 | Initial blueprint - complete research synthesis, architecture, roadmap |
+| 1.0 | May 11, 2026 | Initial blueprint — complete research synthesis, architecture, roadmap |
+
+*This is a living document. Version history will grow with the project. All future changes — parameter tuning, implementation decisions, resolved risks — are recorded here.*
 
 ---
 
