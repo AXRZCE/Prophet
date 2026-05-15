@@ -18,27 +18,46 @@ This is not about speed (HFT). It is about depth — modeling second and third-o
 
 ---
 
-## Current Status (Phase 1.1)
+## Current Status
 
-Phase 1 data collection is complete. Track C calibration is scored and the market beat simulation on every scored event. This was expected because Track C events are short-deadline stress tests with strong public data and high market efficiency.
+Phase 1 data collection is complete. Track C operational scoring is complete. Market forecasts beat simulation forecasts on all scored Track C events.
 
-Track C validates the pipeline, not the core Prophet hypothesis.
+This is treated as:
 
-Track A remains the primary experiment. Track A calibration begins when live narrative events resolve.
+- operational validation: passed
+- short-deadline hard-data forecasting: failed
+- core Track A hypothesis: still pending
 
-### Key Phase 1 Finding
+Track C validated the pipeline:
+- parser worked
+- resolution flow worked
+- calibration scoring worked
+- Brier reporting worked
 
-Prophet successfully measured the model and found that MiroFish narrative simulation was badly miscalibrated on short-deadline stress-test events. The market was substantially better calibrated. This is not a project failure — it is the purpose of the calibration lab.
+Track C did not validate Prophet’s forecasting edge. The scored events were short-deadline, hard-data, culture/rumor, and price-threshold markets where the market had better current information.
 
-### Track Summary
+Phase 1.1 hardening is complete:
+- English enforcement added to all 4 simulation paths
+- Chinese report audit completed
+- ensemble support built with --runs N
+- ensemble reliability fields added
+- high-divergence guardrails added
+- seed guardrails added for price, culture/rumor, and narrative events
+- Phase 2 remains locked
 
-| Track | Platform | Events | Sims | Resolved | Scored | Sim Brier | Market Brier |
-|---|---:|---:|---:|---:|---:|---:|
-| Track A - Narrative | polymarket | 14 | 10 | 0 | 0 | — | — |
-| Track B - Retrospective | kalshi | 5 | 0 | 5 | 0 | — | — |
-| Track C - Stress Test | kalshi | 18 | 16 | 15 | 14 | 0.3900 | 0.0704 |
+Track A is now in observation mode.
 
-Simulations beat market: 0/16. Phase 2 locked until Track A proves edge.
+First major Track A resolution:
+- Ethereum Pectra — Jul 31, 2026
+
+Track B is deferred until:
+- --cutoff-date anti-leakage seed generation is implemented
+- one retrospective pilot proves source filtering works
+- historical market price is available
+
+Phase 2 remains locked until Track A Brier evidence exists.
+
+Do not start paper trading.
 
 ---
 
