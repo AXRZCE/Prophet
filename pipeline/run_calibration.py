@@ -40,12 +40,18 @@ from prophet.pipeline.mirofish_runner import run_simulation
 from prophet.pipeline.probability_parser import parse_forecast, PARSER_VERSION
 
 
-def run_one_event(event: dict, max_rounds: int = 5, dry_run: bool = False) -> dict:
+def run_one_event(event: dict, max_rounds: int = 5, dry_run: bool = False, runs: int = 1, ensemble_id: str = None) -> dict:
     """
     Run the complete calibration pipeline for one event.
 
+    If runs > 1, runs multiple independent MiroFish simulations and computes
+    ensemble statistics (mean, median, std_dev, spread, reliability).
+
     Returns a dict with results including simulation_run_id or error.
     """
+    import uuid
+    if ensemble_id is None:
+        ensemble_id = str(uuid.uuid4())
     market_title = event["market_title"]
     market_id = event["external_market_id"]
     category = event["category"]
@@ -116,80 +122,133 @@ def run_one_event(event: dict, max_rounds: int = 5, dry_run: bool = False) -> di
         )
         print(f"  Seed quality: {seed['seed_quality']}, sources: {seed['source_count']}, hash: {seed['seed_doc_hash']}")
 
-        # --- Step 4: Run MiroFish simulation ---
-        requirement = f"Simulate how different stakeholders discuss and form opinions about: {market_title}. Model the narrative dynamics between supporters and skeptics."
-        print(f"[4/6] Simulation: launching MiroFish ({max_rounds} rounds, ETA ~10 min)...")
-        sim_result = run_simulation(
-            seed_doc=seed["seed_doc_text"],
-            simulation_requirement=requirement,
-            project_name=f"Prophet: {market_title[:50]}",
-            max_rounds=max_rounds,
-        )
+        # --- Steps 4-6: Simulation loop (ensemble support) ---
+        requirement = f"Simulate how different stakeholders discuss and form opinions about: {market_title}. Model the narrative dynamics between supporters and skeptics. IMPORTANT: All output must be in English."
 
-        if sim_result["status"] != "completed":
-            result["error"] = f"Simulation failed: {sim_result.get('error')}"
-            log_failed_run(event_id, result["error"], sim_result)
-            print(f"  ❌ Simulation failed: {sim_result.get('error')}")
-            return result
+        sim_forecasts = []
+        sim_ids = []
 
-        raw_report = sim_result["raw_report_markdown"]
-        print(f"  Report received: {len(raw_report)} chars, report_id={sim_result['report_id']}")
+        for run_idx in range(1, runs + 1):
+            label = f" [{run_idx}/{runs}]" if runs > 1 else ""
 
-        # --- Step 5: Parse probability ---
-        print(f"[5/6] Parser: extracting forecast...")
-        parsed = parse_forecast(
-            raw_report=raw_report,
-            market_question=market_title,
-            resolution_criteria=resolution_criteria,
-            market_price_at_sim=price_yes,
-        )
+            # Step 4: Run MiroFish
+            print(f"[4/6{label}] Simulation: launching MiroFish ({max_rounds} rounds)...")
+            sim_result = run_simulation(
+                seed_doc=seed["seed_doc_text"],
+                simulation_requirement=requirement,
+                project_name=f"Prophet: {market_title[:50]}",
+                max_rounds=max_rounds,
+            )
 
-        parse_ok = parsed["parse_success"]
-        forecast = parsed.get("forecast_probability_yes")
-        confidence = parsed.get("forecast_confidence")
-        direction = parsed.get("forecast_direction")
-        result["forecast_yes"] = forecast
-        result["parse_success"] = parse_ok
+            if sim_result["status"] != "completed":
+                result["error"] = f"Simulation run {run_idx} failed: {sim_result.get('error')}"
+                log_failed_run(event_id, result["error"], sim_result)
+                print(f"  ❌ Simulation failed: {sim_result.get('error')}")
+                if runs == 1:
+                    return result
+                else:
+                    continue
 
-        if parse_ok:
-            print(f"  ✅ PARSED: forecast={forecast:.4f}, confidence={confidence:.2f}, direction={direction}")
-        else:
-            print(f"  ⚠️ AMBIGUOUS: {parsed.get('error', 'no clear forecast')}")
+            raw_report = sim_result["raw_report_markdown"]
+            print(f"  Report: {len(raw_report)} chars, report_id={sim_result['report_id']}")
 
-        # --- Step 6: Write simulation run to Postgres ---
-        print(f"[6/6] DB write: saving simulation run...")
-        sim_id = create_simulation_run(
-            event_id=event_id,
-            seed_id=seed_id,
-            market_snapshot_id=snap_id,
-            mirofish_project_id=sim_result["project_id"],
-            mirofish_simulation_id=sim_result["simulation_id"],
-            mirofish_report_id=sim_result["report_id"],
-            raw_report=raw_report,
-            structured_forecast=parsed,
-            forecast_probability_yes=forecast,
-            forecast_confidence=confidence,
-            forecast_direction=direction,
-            probability_source=parsed.get("probability_source", "llm_extractor"),
-            parse_success=parse_ok,
-            parse_error=parsed.get("error", ""),
-            market_price_used_as_forecast=parsed.get("market_price_used_as_forecast", False),
-            report_parser_version=PARSER_VERSION,
-            prompt_template_version=seed["seed_builder_version"],
-            agent_persona_version="pectra-v1",
-            model_name_agents="deepseek-chat",
-            model_name_report="deepseek-chat",
-            agent_count=sim_result["agent_count"],
-            round_count=sim_result["round_count"],
-            simulation_duration_sec=sim_result["duration_sec"],
-            api_cost_estimate=2.50,
-        )
+            # Step 5: Parse
+            print(f"[5/6{label}] Parser: extracting forecast...")
+            parsed = parse_forecast(
+                raw_report=raw_report,
+                market_question=market_title,
+                resolution_criteria=resolution_criteria,
+                market_price_at_sim=price_yes,
+            )
 
-        result["simulation_run_id"] = sim_id
+            parse_ok = parsed["parse_success"]
+            forecast = parsed.get("forecast_probability_yes")
+            confidence = parsed.get("forecast_confidence")
+            direction = parsed.get("forecast_direction")
+
+            if parse_ok:
+                print(f"  ✅ PARSED: forecast={forecast:.4f}, confidence={confidence:.2f}, direction={direction}")
+            else:
+                print(f"  ⚠️ AMBIGUOUS: {parsed.get('error', 'no clear forecast')}")
+
+            if forecast is not None:
+                sim_forecasts.append(forecast)
+
+            # Step 6: DB write
+            print(f"[6/6{label}] DB write...")
+            sim_id = create_simulation_run(
+                event_id=event_id,
+                seed_id=seed_id,
+                market_snapshot_id=snap_id,
+                mirofish_project_id=sim_result["project_id"],
+                mirofish_simulation_id=sim_result["simulation_id"],
+                mirofish_report_id=sim_result["report_id"],
+                raw_report=raw_report,
+                structured_forecast=parsed,
+                forecast_probability_yes=forecast,
+                forecast_confidence=confidence,
+                forecast_direction=direction,
+                probability_source=parsed.get("probability_source", "llm_extractor"),
+                parse_success=parse_ok,
+                parse_error=parsed.get("error", ""),
+                market_price_used_as_forecast=parsed.get("market_price_used_as_forecast", False),
+                report_parser_version=PARSER_VERSION,
+                prompt_template_version=seed["seed_builder_version"],
+                agent_persona_version="pectra-v1",
+                model_name_agents="deepseek-chat",
+                model_name_report="deepseek-chat",
+                agent_count=sim_result["agent_count"],
+                round_count=sim_result["round_count"],
+                simulation_duration_sec=sim_result["duration_sec"],
+                api_cost_estimate=2.50,
+            )
+            sim_ids.append(sim_id)
+
+            if runs == 1:
+                result["simulation_run_id"] = sim_id
+                result["forecast_yes"] = forecast
+                result["parse_success"] = parse_ok
+            print(f"  ✅ Saved: {sim_id}")
+            print()
+
+        # Ensemble computation
+        if runs > 1 and sim_forecasts:
+            import statistics
+            mean_f = round(statistics.mean(sim_forecasts), 4)
+            median_f = round(statistics.median(sim_forecasts), 4)
+            std_f = round(statistics.stdev(sim_forecasts) if len(sim_forecasts) > 1 else 0.0, 6)
+            spread = round(max(sim_forecasts) - min(sim_forecasts), 4)
+            reliable = std_f <= 0.15 and spread <= 0.20
+
+            print(f"--- Ensemble: {runs} runs ---")
+            print(f"  Mean={mean_f:.4f}  Median={median_f:.4f}  StdDev={std_f:.6f}  Spread={spread:.4f}  Reliable={reliable}")
+
+            from prophet.pipeline.logger import _psql_exec
+            for i, sid in enumerate(sim_ids):
+                _psql_exec(f"""
+                    UPDATE prophet.simulation_runs SET
+                        sim_run_index = {i+1},
+                        ensemble_id = '{ensemble_id}',
+                        ensemble_size = {runs},
+                        ensemble_mean_forecast = {mean_f},
+                        ensemble_median_forecast = {median_f},
+                        ensemble_std_dev = {std_f},
+                        ensemble_forecast_spread = {spread},
+                        ensemble_reliable = {str(reliable).lower()}
+                    WHERE id = '{sid}';
+                """)
+            print(f"  Updated {len(sim_ids)} runs with ensemble metadata")
+
+            if spread > 0.20:
+                print(f"  ⚠️ HIGH DIVERGENCE (spread={spread:.4f}): exclude from edge claims until reviewed")
+
+            result["forecast_yes"] = median_f
+            result["ensemble_mean"] = mean_f
+            result["ensemble_median"] = median_f
+            result["ensemble_reliable"] = reliable
+            result["parse_success"] = parse_ok
+
         result["status"] = "completed"
-
-        print(f"  ✅ Simulation run saved: {sim_id}")
-        print()
 
     except Exception as e:
         result["error"] = str(e)
@@ -205,6 +264,7 @@ def main():
     parser.add_argument("--event-id", help="Polymarket event ID to process")
     parser.add_argument("--limit", type=int, default=1, help="Max number of events to scan and process")
     parser.add_argument("--max-rounds", type=int, default=5, help="MiroFish simulation rounds")
+    parser.add_argument("--runs", type=int, default=1, help="Number of ensemble runs (default 1)")
     parser.add_argument("--twitter-only", action="store_true", help="Twitter simulation only (faster)")
     parser.add_argument("--dry-run", action="store_true", help="Validate without running simulations")
     parser.add_argument("--stats", action="store_true", help="Show parser success rate and exit")
@@ -241,7 +301,7 @@ def main():
     results = []
     for i, event in enumerate(events):
         print(f"--- Event {i+1}/{len(events)} ---")
-        result = run_one_event(event, max_rounds=args.max_rounds, dry_run=args.dry_run)
+        result = run_one_event(event, max_rounds=args.max_rounds, dry_run=args.dry_run, runs=args.runs)
         results.append(result)
 
     # Summary
