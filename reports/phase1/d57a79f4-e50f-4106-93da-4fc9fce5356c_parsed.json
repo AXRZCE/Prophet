@@ -1,0 +1,23 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.95,
+    "forecast_confidence": 0.85,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.27,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "70-80%",
+      "\u81f3\u5c1170%\u4ee5\u4e0a",
+      "\u8d85\u8fc7\u516b\u6210",
+      "90%\u5230100%",
+      "100%"
+    ],
+    "dominant_narrative": "Lil Wayne\u4e0eDrake\u7684\u5e08\u5f92\u5173\u7cfb\u3001Young Money\u5382\u724c\u7ebd\u5e26\u4ee5\u53ca\u4e92\u8865\u521b\u4f5c\u6a21\u5f0f\u4f7f\u5f97\u5408\u4f5c\u51e0\u4e4e\u786e\u5b9a\uff0c\u4e14\u5355\u66f2\u300aI'm Goin In\u300b\u5df2\u53d1\u5e03\uff0c\u5408\u4f5c\u6210\u4e3a\u65e2\u5b9a\u4e8b\u5b9e\u3002",
+    "contrarian_narrative": "\u65e5\u7a0b\u51b2\u7a81\u3001\u5065\u5eb7\u95ee\u9898\u3001\u7248\u6743\u7ea0\u7eb7\u53ca\u4e13\u8f91\u98ce\u683c\u7edf\u4e00\u6027\u53ef\u80fd\u6784\u6210\u963b\u788d\uff0c\u4f46\u88ab\u8ba4\u4e3a\u4e0d\u8db3\u4e3a\u8651\u3002",
+    "final_reasoning": "\u62a5\u544a\u6458\u8981\u7ed9\u51fa70-80%\u521d\u59cb\u6982\u7387\uff0c\u4f46\u540e\u7eed\u591a\u4f4dAgent\u7ed9\u51fa90%-100%\u7684\u4f30\u8ba1\uff0c\u4e14\u5355\u66f2\u53d1\u5e03\u786e\u8ba4\u5408\u4f5c\uff0c\u56e0\u6b64\u4e0a\u8c03\u81f395%\u3002",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

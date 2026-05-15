@@ -1,0 +1,22 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.44,
+    "forecast_confidence": 0.7,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.24,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "30-35%",
+      "44%",
+      "35-40%",
+      "60-70%"
+    ],
+    "dominant_narrative": "Travis Scott's recent social media activity and increased industry interactions with Drake suggest a collaboration is likely, with market odds implying a 44% probability.",
+    "contrarian_narrative": "Lack of historical collaboration and creative style differences between Drake and Travis Scott, along with market pricing favoring NO at 0.76, indicate significant uncertainty.",
+    "final_reasoning": "The report cites multiple probability estimates: market implied 44% (PrizePicks), analyst 30-35% (bettingmarket_566), fan estimate 35-40% (hurry_up_996), and Travis Scott's own 60-70%; I weighted these to 44% as the most central market-based figure.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

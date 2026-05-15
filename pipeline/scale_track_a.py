@@ -66,7 +66,7 @@ for i, event in enumerate(events_to_run):
     print(f"  [3/6] Seed: {seed_id} | quality={seed['seed_quality']}, sources={seed['source_count']}")
     
     # MiroFish
-    req = f"Simulate how stakeholders discuss: {event['market_title']}. Model narrative dynamics."
+    req = f"Simulate how stakeholders discuss: {event['market_title']}. Model narrative dynamics. IMPORTANT: All output must be in English."
     print(f"  [4/6] MiroFish: launching (3 rounds, ~5 min)...")
     sim = run_simulation(seed['seed_doc_text'], req, f"Prophet Track A: {event['market_title'][:50]}", max_rounds=3)
     

@@ -1,0 +1,20 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.85,
+    "forecast_confidence": 0.7,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.15,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "100% (PinkPantheress official)",
+      "15% (market price)"
+    ],
+    "dominant_narrative": "PinkPantheress's official team confirmed the collaboration is real, with strong fan and media evidence supporting the YES outcome.",
+    "contrarian_narrative": "The prediction market prices the YES outcome at only 15%, reflecting skepticism from rational traders despite the clues.",
+    "final_reasoning": "The PinkPantheress official agent stated the collaboration is 100% confirmed, and the report's overall narrative strongly supports YES, so I set forecast_probability_yes to 0.85, ignoring the market price of 0.15.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

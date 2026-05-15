@@ -332,8 +332,8 @@ def create_calibration_result(
 
     sql = f"""INSERT INTO prophet.calibration_results (
     simulation_run_id, event_id, category,
-    market_brier_score, simulation_brier_score,
-    simulation_better_than_market, market_was_correct, simulation_was_correct,
+    market_brier_score, sim_brier_score,
+    sim_better_than_market, market_was_correct, sim_was_correct,
     delta_direction_correct, days_to_resolution
 ) VALUES (
     '{simulation_run_id}', '{event_id}', '{cat}',

@@ -1,0 +1,23 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.75,
+    "forecast_confidence": 0.8,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.2,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "90%",
+      "80-90%",
+      "70-85%",
+      "40%",
+      "65-85%"
+    ],
+    "dominant_narrative": "Internal insiders and official accounts confirm Lil Baby's feature on Drake's Iceman album, supported by social media signals, deep industry ties, and creative alignment.",
+    "contrarian_narrative": "Market pricing at 20% and skepticism from a music blogger citing Drake's recent collaborations with other artists and potential artistic direction conflicts suggest uncertainty.",
+    "final_reasoning": "Weighted average of agent estimates (90%, 80-90%, 70-85%, 40%) yields approximately 75%, with the report's synthesis range of 65-85% supporting this midpoint.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

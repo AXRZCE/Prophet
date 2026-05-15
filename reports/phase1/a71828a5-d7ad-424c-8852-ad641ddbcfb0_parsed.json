@@ -1,0 +1,20 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.26,
+    "forecast_confidence": 0.3,
+    "forecast_direction": "NO",
+    "market_price_detected": 0.26,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "26%",
+      "0.74 NO"
+    ],
+    "dominant_narrative": "The simulation shows a split between rational fans citing market odds (NO at 0.74) and optimistic fans pointing to Drake's appearance in EsDeeKid's music video as a strong signal, but the market price of 0.26 suggests a low probability of YES.",
+    "contrarian_narrative": "Optimistic fans and EsDeeKid himself argue that the market underestimates the probability, citing Drake's direct involvement and social media hints as evidence of a likely collaboration.",
+    "final_reasoning": "The report repeatedly mentions the market price of 0.26 (YES) and 0.74 (NO) as the primary probability signal, with no independent agent probability estimates or synthesis; thus the forecast is set to the market price of 0.26, but with low confidence due to lack of simulation-specific estimates.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.7,
+    "forecast_confidence": 0.85,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.5,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "65-75%",
+      "80%",
+      "60-70%"
+    ],
+    "dominant_narrative": "The simulation shows strong evidence from livestream previews, industry relationship evolution, and style compatibility, leading to a high probability that Yeat appears on Drake's Iceman album, specifically on track 'Dog House'.",
+    "contrarian_narrative": "Some agents caution that official confirmation is lacking and artistic fusion remains uncertain, leaving a 25-35% chance the collaboration does not materialize.",
+    "final_reasoning": "The report explicitly states a core probability of 65-75% and includes agent estimates of 80% (drake_705) and 60-70% (xxlmagcom_151), yielding a weighted average of approximately 70%.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

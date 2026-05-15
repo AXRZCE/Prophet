@@ -1,6 +1,6 @@
 # Prophet Phase 1 — Calibration Report
 
-**Generated:** 2026-05-14 22:57 UTC
+**Generated:** 2026-05-15 04:22 UTC
 
 ---
 
@@ -23,7 +23,7 @@
 |---|---:|---:|---:|---:|---:|---:|
 | Track A — Live Narrative | polymarket | 14 | 10 | 0 | 0 | 0 | 14/0/0 |
 | Track B — Retrospective | kalshi | 5 | 0 | 0 | 5 | 0 | 0/4/1 |
-| Track C — Stress Test | kalshi | 6 | 3 | 0 | 0 | 0 | 0/1/5 |
+| Track C — Stress Test | kalshi | 18 | 16 | 0 | 15 | 16 | 0/13/5 |
 
 ## Track A — Live Narrative
 
@@ -69,17 +69,17 @@
 
 | Metric | Value |
 |---|---|
-| Events | 6 |
+| Events | 18 |
 | Platform | kalshi |
-| Completed simulations | 3 |
+| Completed simulations | 16 |
 | Failed simulations | 0 |
-| Resolved | 0 |
-| Scored (calibration) | 0 |
+| Resolved | 15 |
+| Scored (calibration) | 16 |
 | Validity: true | 0 |
-| Validity: partial | 1 |
+| Validity: partial | 13 |
 | Validity: false | 5 |
 
-**Status: Active.** 3 simulation(s) completed.
+**Status: Active.** 16 simulation(s) completed.
 
 
 ## ⚠️ Important
@@ -98,9 +98,9 @@
 | Track | Total | Success | Failed | Rate |
 |---|---:|---:|---:|
 | Track A — Live Narrative | 10 | 10 | 0 | 100.0% |
-| Track C — Stress Test | 3 | 3 | 0 | 100.0% |
+| Track C — Stress Test | 16 | 16 | 0 | 100.0% |
 
-**Cumulative parser success rate: 100.0%** (13/13)
+**Cumulative parser success rate: 100.0%** (26/26)
 
 ## Pending Resolutions
 
@@ -111,8 +111,8 @@
 | Track A — Live Narrative | Will OpenAI announce earbuds or headphones in 2026 | polymarket | 0.5000 | true |
 | Track A — Live Narrative | Will Loopscale launch a token by Dec 31 2026? | polymarket | 0.3700 | true |
 | Track A — Live Narrative | Will Loopscale launch a token by Dec 31 2026? | polymarket | 0.3700 | true |
-| Track A — Live Narrative | Will Loopscale launch a token by December 31, 2026 | polymarket | 0.3700 | true |
 | Track A — Live Narrative | Will Loopscale launch a token by December 31, 2026 | polymarket | 0.5000 | true |
+| Track A — Live Narrative | Will Loopscale launch a token by December 31, 2026 | polymarket | 0.3700 | true |
 | Track A — Live Narrative | Will OpenAI's IPO closing market cap be above $800 | polymarket | 0.7200 | true |
 | Track A — Live Narrative | SpaceX market cap $2.0-2.5T at IPO close? | polymarket | 0.2750 | true |
 | Track A — Live Narrative | SpaceX market cap $2.0-2.5T at IPO? | polymarket | 0.2750 | true |
@@ -137,76 +137,10 @@ Track C results are used for operational validation only. They test resolution m
 
 ## Gate G2a Assessment
 
-- 10 events logged: ✅ (13/10)
-- 7/10 parse successfully: ✅ (13/13)
+- 10 events logged: ✅ (26/10)
+- 7/10 parse successfully: ✅ (26/26)
 - No systematic market-price-copy failure: ✅
-- Events resolved: ✅ (5 resolved)
+- Events resolved: ✅ (20 resolved)
 - Track separation active: ✅ (A/B/C reported separately)
 - Multi-platform support: ✅ (Polymarket + Kalshi)
 - Track B/C simulations: ⬜ (pending MiroFish execution)
-
----
-
-## Notable Divergence Signals
-
-### Track C: Bitcoin ≤$71,700 (May 14, 2026)
-
-| Metric | Value |
-|---|---|
-| Market price (YES) | 0.005 (0.5%) |
-| Simulation forecast | 0.75 (75%) |
-| Direction | YES |
-| Confidence | 0.70 |
-
-**This is a genuine divergence signal, NOT proven alpha.** The MiroFish simulation's agent collective produced a 75% probability that BTC would trade ≤$71,700, while the Kalshi market priced this outcome at near-zero. This represents a **150x divergence** between simulated narrative dynamics and market price.
-
-- The market treated this as essentially impossible (0.5¢ probability)
-- The simulation's agents identified potential downside catalysts (macro, regulation, technical)
-- This event had very low volume ($94) and liquidity — appropriate caveats apply
-- **Do not trade on this divergence.** It is a Phase 1 data point for calibration purposes only
-- Validates the core Prophet thesis: MiroFish simulations CAN produce forecasts that diverge meaningfully from market prices
-
-### Track A: SpaceX IPO Market Cap ($2.0-2.5T)
-
-| Metric | Value |
-|---|---|
-| Market price (YES) | 0.28 |
-| Simulation forecast | 0.27 |
-| Direction | NO |
-| Confidence | 0.80 |
-
-Minimal divergence (~1%), but high-confidence NO with strong agent consensus. The simulation correctly identified that SpaceX's current private valuation trajectory makes a $2.0-2.5T IPO market cap unlikely.
-
----
-
-## Infrastructure Improvements (May 14, 2026)
-
-| Fix | Status |
-|---|---|
-| Lock file anti-overlap | ✅ Added to `overnight_phase1.py` |
-| Disk persistence | ✅ Added to `prophet/pipeline/logger.py` |
-| `_escape_sql` backslash handling | ✅ Fixed |
-| Snapshot `None`-return guard | ✅ Added to `run_track_c.py` |
-| MiroFish stability monitoring | ✅ Documented (Zep SSL dependency) |
-| Hourly cron disabled | ✅ (unsafe without lock/resume logic) |
-
-## Known Limitations
-
-1. **No Brier scores yet.** Track A events are future-dated (no resolutions available). Brier comparison requires resolved events.
-2. **No Track B simulations.** Retrospective events have 0 simulations — deferred pending anti-leakage seed generation and historical price verification.
-3. **MiroFish Zep dependency.** Cloud Zep API SSL errors can cause backend crashes. Mitigation: aggressive polling + disk persistence.
-4. **Single simulation per event.** Re-run variance not yet measured. Future: ≥2 runs per event for stability diagnostics.
-5. **BTC event volume.** The divergent BTC Track C event had only $94 volume — divergence may reflect low-liquidity noise, not genuine information edge.
-6. **Manual 10th event.** Apple foldable iPhone was manually inserted (not from Polymarket scanner) to reach the 10-event Track A target.
-
-## Next Phase Recommendation
-
-**Phase 1 Data Collection is functionally complete.** Awaiting event resolutions for Brier scoring.
-
-Phase 2 (paper trading) should not start until:
-- At least 3 Track A events have resolved
-- Brier score comparison is available (sim vs market)
-- Simulation re-runs (≥2 per event) validate forecast stability
-- BTC-style divergences are confirmed NOT to be low-liquidity artifacts
-
-**Gate G2a status: DATA COLLECTED — AWAITING RESOLUTIONS.**

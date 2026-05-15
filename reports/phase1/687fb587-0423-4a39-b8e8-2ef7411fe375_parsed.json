@@ -1,0 +1,19 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.37,
+    "forecast_confidence": 0.7,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.37,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "37%"
+    ],
+    "dominant_narrative": "The simulation suggests a 37% probability that Morgan Wallen will be featured on Drake's album Iceman, based on market consensus from Polymarket and agent analysis.",
+    "contrarian_narrative": "Skeptics point to genre differences and the absence of Wallen's name from the announced tracklist as reasons for the low probability.",
+    "final_reasoning": "The report explicitly states the Polymarket probability as 37%, which is the simulation's implied forecast, derived from agent trading and information synthesis.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

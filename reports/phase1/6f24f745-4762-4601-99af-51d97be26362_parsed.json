@@ -1,0 +1,23 @@
+{
+  "parsed": {
+    "forecast_probability_yes": 0.65,
+    "forecast_confidence": 0.8,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.27,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "80-90%",
+      "75-85%",
+      "60-70%",
+      "60-65%",
+      "55-65%"
+    ],
+    "dominant_narrative": "Strong historical collaboration, recent Instagram signal, and industry relationship networks point to a high likelihood of Young Thug appearing on Drake's Iceman album.",
+    "contrarian_narrative": "Legal issues, creative fit concerns, and potential label complications could derail the collaboration.",
+    "final_reasoning": "The simulation's probability estimate is derived from a weighted average of agent estimates: Young Thug (85%), drake_642 (80%), Talk Dat Talk (65%), HotNewHipHop (62.5%), and the final synthesis (60%), yielding approximately 65%.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

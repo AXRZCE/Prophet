@@ -40,6 +40,8 @@ SEED_BUILDER_VERSION = "v0.1"
 
 SEED_TEMPLATE = """# Event Seed Document
 
+**IMPORTANT LANGUAGE INSTRUCTION: All analysis, reports, and agent communication in this simulation MUST be written in English. Do NOT generate output in any other language.**
+
 ## Market Question
 {market_question}
 

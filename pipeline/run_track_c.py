@@ -190,7 +190,7 @@ def run_one_track_c(market: dict, max_rounds: int = 3) -> dict:
         print(f"  quality={seed['seed_quality']}, sources={seed['source_count']}")
         
         # Step 4: MiroFish
-        requirement = f"Simulate how stakeholders and analysts discuss: {market_title}. Model the narrative and information dynamics."
+        requirement = f"Simulate how stakeholders and analysts discuss: {market_title}. Model the narrative and information dynamics. IMPORTANT: All output must be in English."
         print(f"[4/6] Simulation ({max_rounds} rounds)...")
         sim_result = run_simulation(
             seed_doc=seed["seed_doc_text"],
