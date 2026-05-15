@@ -1,0 +1,27 @@
+{
+  "parse_ok": true,
+  "forecast": 0.75,
+  "confidence": 0.7,
+  "direction": "YES",
+  "full": {
+    "forecast_probability_yes": 0.75,
+    "forecast_confidence": 0.7,
+    "forecast_direction": "YES",
+    "market_price_detected": 0.28,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "75%",
+      "70%",
+      "60-70%",
+      "60% to 70%",
+      "60% to 80%"
+    ],
+    "dominant_narrative": "Apple is likely to release a foldable iPhone in Fall 2026, driven by strong supply chain commitment and market demand, with a 75% probability.",
+    "contrarian_narrative": "Production delays, hinge yield issues, and geopolitical risks could push the launch to 2027, with some estimates as low as 60%.",
+    "final_reasoning": "The report explicitly states '\u6a21\u62df\u663e\u793a\uff0c\u82f9\u679c\u57282026\u5e74\u53d1\u5e03\u53ef\u6298\u53e0iPhone\u7684\u6982\u7387\u4e3a75%' (the simulation shows a 75% probability), and individual agents gave estimates of 70% (DigiTimes), 60-70% (leakers), and 60-80% (analysts), leading to a weighted average of 75%.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

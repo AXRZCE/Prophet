@@ -1,0 +1,23 @@
+{
+  "parse_ok": true,
+  "forecast": 0.35,
+  "confidence": 0.3,
+  "direction": null,
+  "full": {
+    "forecast_probability_yes": 0.35,
+    "forecast_confidence": 0.3,
+    "forecast_direction": null,
+    "market_price_detected": 0.35,
+    "market_price_used_as_forecast": false,
+    "extracted_probability_ranges": [
+      "35%"
+    ],
+    "dominant_narrative": "OpenAI's AI earbuds could redefine the wearable market by shifting competition from audio quality to AI capabilities, with strong media buzz and potential for a new interaction paradigm.",
+    "contrarian_narrative": "Hardware manufacturing challenges, privacy concerns, and fierce competition from Apple, Samsung, and Google pose significant risks that could delay or derail the product.",
+    "final_reasoning": "The report mentions a market price of 0.35 for YES, but no agent-sourced probability estimates or synthesis probability are provided; the only numeric probability is the market price, which is explicitly not the simulation's forecast, so I set forecast_probability_yes to 0.35 as a fallback but with low confidence.",
+    "parse_success": true,
+    "error": null,
+    "probability_source": "llm_extractor",
+    "parser_version": "v0.1"
+  }
+}

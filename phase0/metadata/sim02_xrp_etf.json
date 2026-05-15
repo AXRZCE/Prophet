@@ -1,0 +1,15 @@
+{
+  "event_name": "XRP Spot ETF Approval",
+  "category": "crypto_regulatory",
+  "agents": 15,
+  "rounds": 5,
+  "report_size_kb": 30,
+  "model": "deepseek-chat",
+  "created_at": "2026-05-12T15:30:00Z",
+  "mirofish_project_id": "proj_71a645f34dad",
+  "simulation_id": "sim_8fc51d4d5d64",
+  "report_id": "report_b3f5830011b3",
+  "market_price_at_sim": 0.35,
+  "market_question": "Will the SEC approve a spot XRP ETF by September 30, 2026?",
+  "resolution_criteria": "SEC files notice of effectiveness for any 19b-4 filing from a qualified exchange listing a spot XRP ETF"
+}

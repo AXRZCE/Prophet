@@ -1,0 +1,15 @@
+{
+  "event_name": "Anthropic $50B ARR",
+  "category": "company_product",
+  "agents": 15,
+  "rounds": 5,
+  "report_size_kb": 51,
+  "model": "deepseek-chat",
+  "created_at": "2026-05-12T15:55:00Z",
+  "mirofish_project_id": "proj_2ccd6cc4f987",
+  "simulation_id": "sim_e121b50820b6",
+  "report_id": "report_118d9b64caa7",
+  "market_price_at_sim": 0.48,
+  "market_question": "Will Anthropic achieve $50B+ ARR by Q4 2026?",
+  "resolution_criteria": "ARR calculated as most recent quarter revenue × 4, confirmed via official earnings release or credible financial press"
+}
