@@ -21,7 +21,7 @@ from typing import Optional
 
 # DeepSeek API — OpenAI-compatible endpoint
 # Phase 0 confirmed this works directly (no LiteLLM proxy needed)
-DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "DEEPSEEK_KEY_REDACTED")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
 DEEPSEEK_MODEL = "deepseek-chat"
 
