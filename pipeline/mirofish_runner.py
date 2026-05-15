@@ -174,6 +174,13 @@ def run_simulation(
         _log_failed_to_db(event_id, step_name, msg)
         return result
 
+    # Duplicate prevention: skip if this event already has a completed sim
+    if event_id and has_completed_sim(event_id):
+        result["status"] = "skipped"
+        result["error"] = "Duplicate prevention — event already simulated"
+        print(f"  [skip] Event already has completed sim, skipping", flush=True)
+        return result
+
     try:
         # ── Step 1: Upload seed + generate ontology ──
         t0 = time.time()
@@ -364,6 +371,17 @@ def count_running_mirofish_sims() -> int:
         return int(r.stdout.strip() or 0)
     except Exception:
         return 0  # assume safe
+
+
+def has_completed_sim(event_id: str) -> bool:
+    """Check if an event already has a completed simulation run in the DB.
+    Prevents duplicate runs from batch scripts that get killed and re-launched."""
+    try:
+        from prophet.pipeline.logger import _psql
+        count = _psql(f"SELECT COUNT(*) FROM prophet.simulation_runs WHERE event_id = '{event_id}' AND run_status = 'completed';")
+        return int(count.strip()) > 0 if count and count.strip() else False
+    except Exception:
+        return False  # assume no existing sim on error
 
 
 def _wait_for_sim_slot(max_wait_sec: int = 600) -> bool:
