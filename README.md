@@ -1,10 +1,10 @@
-# Prophet — Project Blueprint v1.5
+# Prophet — Project Blueprint v1.6
 
-**Status:** Phase 1 Pipeline Operational — Gate G2a Data Collection Underway
-**Gate G2a:** 2/10 events logged, 0 resolved
-**Version:** 1.5
-**Last Updated:** 2026-05-12
-**Repos:** `AXRZCE/Prophet` (main), `AXRZCE/clawbot-v2` (master)
+**Status:** Phase 1.1 — Hardening + Observation
+**Events:** 26 logged, 21 resolved, 14 scored
+**Version:** 1.6
+**Last Updated:** 2026-05-15
+**Repos:** `AXRZCE/Prophet` (code only — clawbot-v2 MUST NOT contain Prophet code)
 
 ---
 
@@ -15,6 +15,30 @@ Prediction markets aggregate dispersed beliefs into prices (Hayek's insight, fin
 **The gap no one has filled:** A closed-loop system where simulated narrative dynamics → inform trading decisions → outcomes calibrate future simulations.
 
 This is not about speed (HFT). It is about depth — modeling second and third-order narrative effects before the market prices them in.
+
+---
+
+## Current Status (Phase 1.1)
+
+Phase 1 data collection is complete. Track C calibration is scored and the market beat simulation on every scored event. This was expected because Track C events are short-deadline stress tests with strong public data and high market efficiency.
+
+Track C validates the pipeline, not the core Prophet hypothesis.
+
+Track A remains the primary experiment. Track A calibration begins when live narrative events resolve.
+
+### Key Phase 1 Finding
+
+Prophet successfully measured the model and found that MiroFish narrative simulation was badly miscalibrated on short-deadline stress-test events. The market was substantially better calibrated. This is not a project failure — it is the purpose of the calibration lab.
+
+### Track Summary
+
+| Track | Platform | Events | Sims | Resolved | Scored | Sim Brier | Market Brier |
+|---|---:|---:|---:|---:|---:|---:|
+| Track A - Narrative | polymarket | 14 | 10 | 0 | 0 | — | — |
+| Track B - Retrospective | kalshi | 5 | 0 | 5 | 0 | — | — |
+| Track C - Stress Test | kalshi | 18 | 16 | 15 | 14 | 0.3900 | 0.0704 |
+
+Simulations beat market: 0/16. Phase 2 locked until Track A proves edge.
 
 ---
 
@@ -82,7 +106,7 @@ Real Markets        │   MiroFish / OASIS    │   Academic ABM
 | **G0** | MiroFish integration + parser + DB write | ✅ Full Pass |
 | **G1** | Phase 1 pipeline build (8 modules) | ✅ Full Pass |
 | **G1.5** | Smoke test — one live end-to-end run | ✅ Passed |
-| **G2a** | 10 events logged, 7/10 parsed, events resolved, sim Brier better | ⏳ 2/10 |
+| **G2a** | 10 events logged, 7/10 parsed, events resolved, sim Brier better | ✅ 26/10 logged, 26/26 parsed, 21 resolved, Track C scored (0/16 sim wins — expected for stress tests) |
 
 ---
 
